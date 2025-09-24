@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="new and delete.cpp">
+    <ClCompile Include="vector.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
