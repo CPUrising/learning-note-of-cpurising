@@ -4,6 +4,7 @@
 Debug/
 Release/
 x64/
+x86/
 # 忽略可执行文件和中间文件
 *.exe
 *.obj
