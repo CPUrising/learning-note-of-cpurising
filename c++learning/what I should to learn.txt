@@ -1,0 +1,13 @@
+C++方式的动态内存申请
+
+面向对象：
+运算符重载
+继承派生
+多态与虚函数；
+
+STL C++ 标准模板库（Standard Template Library，STL）
+容器（Containers）、迭代器（Iterators）、算法（Algorithms）、函数对象（Function Objects）和适配器（Adapters）
+https://www.runoob.com/cplusplus/cpp-stl-tutorial.html
+
+模板template
+https://www.runoob.com/cplusplus/cpp-templates.html
