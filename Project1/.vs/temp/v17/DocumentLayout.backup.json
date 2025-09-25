@@ -1,0 +1,69 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\documents\\\u8BFE\u672C\u7B14\u8BB0\\temp\\Project1\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{11CBE8EB-472C-41A1-9987-89EB4D4580A8}|fibo\\fibo.vcxproj|D:\\documents\\\u8BFE\u672C\u7B14\u8BB0\\temp\\Project1\\fibo\\FileName.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{11CBE8EB-472C-41A1-9987-89EB4D4580A8}|fibo\\fibo.vcxproj|solutionrelative:fibo\\FileName.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E621EE14-1471-4226-B358-874EFFAFB057}|Project1\\Project1.vcxproj|D:\\documents\\\u8BFE\u672C\u7B14\u8BB0\\temp\\Project1\\Project1\\x64\u4E0B\u5B57\u8282int_float.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{E621EE14-1471-4226-B358-874EFFAFB057}|Project1\\Project1.vcxproj|solutionrelative:Project1\\x64\u4E0B\u5B57\u8282int_float.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{BF4278D8-DC34-4A6F-BC73-CD4A9705CEA0}|swap\\swap.vcxproj|D:\\documents\\\u8BFE\u672C\u7B14\u8BB0\\temp\\Project1\\swap\\swap.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{BF4278D8-DC34-4A6F-BC73-CD4A9705CEA0}|swap\\swap.vcxproj|solutionrelative:swap\\swap.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "FileName.cpp",
+              "DocumentMoniker": "D:\\documents\\\u8BFE\u672C\u7B14\u8BB0\\temp\\Project1\\fibo\\FileName.cpp",
+              "RelativeDocumentMoniker": "fibo\\FileName.cpp",
+              "ToolTip": "D:\\documents\\\u8BFE\u672C\u7B14\u8BB0\\temp\\Project1\\fibo\\FileName.cpp",
+              "RelativeToolTip": "fibo\\FileName.cpp",
+              "ViewState": "AgIAACcAAAAAAAAAAAAAADEAAAAEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-09-24T06:04:09.913Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "swap.cpp",
+              "DocumentMoniker": "D:\\documents\\\u8BFE\u672C\u7B14\u8BB0\\temp\\Project1\\swap\\swap.cpp",
+              "RelativeDocumentMoniker": "swap\\swap.cpp",
+              "ToolTip": "D:\\documents\\\u8BFE\u672C\u7B14\u8BB0\\temp\\Project1\\swap\\swap.cpp",
+              "RelativeToolTip": "swap\\swap.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAALAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-09-22T06:43:47.75Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "x64\u4E0B\u5B57\u8282int_float.cpp",
+              "DocumentMoniker": "D:\\documents\\\u8BFE\u672C\u7B14\u8BB0\\temp\\Project1\\Project1\\x64\u4E0B\u5B57\u8282int_float.cpp",
+              "RelativeDocumentMoniker": "Project1\\x64\u4E0B\u5B57\u8282int_float.cpp",
+              "ToolTip": "D:\\documents\\\u8BFE\u672C\u7B14\u8BB0\\temp\\Project1\\Project1\\x64\u4E0B\u5B57\u8282int_float.cpp",
+              "RelativeToolTip": "Project1\\x64\u4E0B\u5B57\u8282int_float.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAA/AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-09-22T06:04:51.948Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
