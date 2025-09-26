@@ -124,6 +124,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="function_linkedList.cpp" />
+    <ClCompile Include="function_system.cpp" />
     <ClCompile Include="linked_list.cpp" />
   </ItemGroup>
   <ItemGroup>

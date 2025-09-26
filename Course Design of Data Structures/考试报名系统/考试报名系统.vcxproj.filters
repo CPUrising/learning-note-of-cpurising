@@ -21,6 +21,9 @@
     <ClCompile Include="function_linkedList.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="function_system.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="linkedList.h">

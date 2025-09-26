@@ -1,8 +1,8 @@
 #include"linkedList.h"
 
-Linkedlist::Linkedlist()
+Linkedlist::Linkedlist()//I have to add too much for this dummy ,how to avoid?
 {
-	_dummyHead = new LinkedNode(0);
+	_dummyHead = new LinkedNode;
 	_size = 0;
 }
 Linkedlist::~Linkedlist()
@@ -15,40 +15,39 @@ Linkedlist::~Linkedlist()
 		delete temp;
 	}
 }
-int Linkedlist::get(int index)//index starts from 0
+void Linkedlist::print_head_row()
+{
+	std::cout << "考号" << std::setw(SPACE) << "姓名" << std::setw(SPACE) << "性别" << std::setw(SPACE) << "年龄" << std::setw(SPACE) << "报考类别\n";
+}
+void Linkedlist::print_person(const LinkedNode& node)
+{
+	std::cout << node.number << std::setw(SPACE) << node.name << std::setw(SPACE) << node.sex << std::setw(SPACE) << node.age << std::setw(SPACE) << node.application << std::endl;
+}
+void Linkedlist::node_find(int index)//index starts from 0
 {
 	if (index >= _size || index < 0)
-		return -1;
+	{
+		std::cout << "查无此人\n";
+		return;
+	}
 	LinkedNode* cur = _dummyHead->next;
 	while (index--)
 		cur = cur->next;
-	return cur->val;
+	print_head_row();
+	print_person(*cur);
 }
-int Linkedlist::find(int value)
-{
-	LinkedNode* cur = _dummyHead->next;
-	int count = 0;
-	while (cur != nullptr)
-	{
-		if (cur->val == value)
-			return count;
-		cur = cur->next;
-		count++;
-	}
-	return -1;
-}
-void Linkedlist::putback_node(int value)
+void Linkedlist::node_putback(const LinkedNode& node)
 {
 	LinkedNode* cur = _dummyHead;
 	while (cur->next != nullptr)
 	{
 		cur = cur->next;
 	}
-	LinkedNode* newNode = new LinkedNode(value);
+	LinkedNode* newNode = new LinkedNode(node);
 	cur->next = newNode;
 	_size++;
 }
-void Linkedlist::insert_node(int index, int value)
+void Linkedlist::node_insert(int index, const LinkedNode& node)
 {
 	LinkedNode* cur = _dummyHead;
 	if (index < 0 || index >= _size)
@@ -57,12 +56,12 @@ void Linkedlist::insert_node(int index, int value)
 	{
 		cur = cur->next;
 	}
-	LinkedNode* newNode = new LinkedNode(value);
+	LinkedNode* newNode = new LinkedNode(node);
 	newNode->next = cur->next;
 	cur->next = newNode;
 	_size++;
 }
-void Linkedlist::delete_node(int index)
+void Linkedlist::node_delete(int index)
 {
 	LinkedNode* cur = _dummyHead;
 	if (index < 0 || index >= _size)
@@ -74,19 +73,31 @@ void Linkedlist::delete_node(int index)
 	LinkedNode* temp = cur->next;
 	cur->next = cur->next->next;
 	delete temp;
-	//delete命令指示释放了tmp指针原本所指的那部分内存，
-		//被delete后的指针tmp的值（地址）并非就是NULL，而是随机值。也就是被delete后，
-		//如果不再加上一句tmp=nullptr,tmp会成为乱指的野指针
-		//如果之后的程序不小心使用了tmp，会指向难以预想的内存空间
+	// The delete command instructs to free the memory originally pointed to by the tmp pointer.
+	// After being deleted, the value (address) of pointer tmp is not NULL but a random value. That is, after deletion,
+	// if we don't add tmp = nullptr, tmp will become a dangling pointer that points randomly.
+	// If the program accidentally uses tmp afterwards, it will point to an unpredictable memory space.
 	temp = nullptr;
 	_size--;
+}
+void Linkedlist::node_edit(int index, const LinkedNode& node)
+{
+	LinkedNode* cur = _dummyHead;
+	if (index < 0 || index >= _size)
+		index = 0;
+	while (index--)
+	{
+		cur = cur->next;
+	}
+	cur->next=node//well ,I need overload '=' here
 }
 void Linkedlist::print_list()
 {
 	LinkedNode* cur = _dummyHead->next;
+	print_head_row();
 	while (cur != nullptr)
 	{
-		std::cout << cur->val << ' ';
+		print_person(*cur);
 		cur = cur->next;
 	}
 }
