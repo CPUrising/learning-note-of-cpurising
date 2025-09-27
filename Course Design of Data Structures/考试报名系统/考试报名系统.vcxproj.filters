@@ -29,5 +29,8 @@
     <ClInclude Include="linkedList.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="system.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
