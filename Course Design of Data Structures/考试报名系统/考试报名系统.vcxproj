@@ -125,7 +125,7 @@
   <ItemGroup>
     <ClCompile Include="function_linkedList.cpp" />
     <ClCompile Include="function_system.cpp" />
-    <ClCompile Include="linked_list.cpp" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="linkedList.h" />

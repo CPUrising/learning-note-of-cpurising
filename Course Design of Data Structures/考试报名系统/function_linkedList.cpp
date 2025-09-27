@@ -23,18 +23,27 @@ void Linkedlist::print_person(const LinkedNode& node)
 {
 	std::cout << node.number << std::setw(SPACE) << node.name << std::setw(SPACE) << node.sex << std::setw(SPACE) << node.age << std::setw(SPACE) << node.application << std::endl;
 }
-void Linkedlist::node_find(int index)//index starts from 0
+LinkedNode* Linkedlist::node_search(std::string num)//index starts from 0
 {
-	if (index >= _size || index < 0)
-	{
-		std::cout << "查无此人\n";
-		return;
-	}
 	LinkedNode* cur = _dummyHead->next;
-	while (index--)
+	while (cur != nullptr&&cur->number!= num)
 		cur = cur->next;
-	print_head_row();
-	print_person(*cur);
+	if (cur == nullptr)
+	{
+		return nullptr;
+	}
+	return cur;
+}
+void Linkedlist::node_find(std::string num)
+{
+	LinkedNode* cur = node_search(num);
+	if (cur == nullptr)
+		std::cout << "查无此人\n";
+	else
+	{
+		print_head_row();
+		print_person(*cur);
+	}
 }
 void Linkedlist::node_putback(const LinkedNode& node)
 {
@@ -52,24 +61,16 @@ void Linkedlist::node_insert(int index, const LinkedNode& node)
 	LinkedNode* cur = _dummyHead;
 	if (index < 0 || index >= _size)
 		index = 0;
-	while (index--)
-	{
-		cur = cur->next;
-	}
 	LinkedNode* newNode = new LinkedNode(node);
 	newNode->next = cur->next;
 	cur->next = newNode;
 	_size++;
 }
-void Linkedlist::node_delete(int index)
+void Linkedlist::node_delete(std::string num)
 {
-	LinkedNode* cur = _dummyHead;
-	if (index < 0 || index >= _size)
-		return;
-	while (index--)
-	{
-		cur = cur->next;
-	}
+	LinkedNode* cur = node_search(num);
+	if (cur == nullptr)
+		std::cout << "查无此人\n";
 	LinkedNode* temp = cur->next;
 	cur->next = cur->next->next;
 	delete temp;
@@ -80,16 +81,12 @@ void Linkedlist::node_delete(int index)
 	temp = nullptr;
 	_size--;
 }
-void Linkedlist::node_edit(int index, const LinkedNode& node)
+void Linkedlist::node_edit(std::string num, const LinkedNode& node)
 {
-	LinkedNode* cur = _dummyHead;
-	if (index < 0 || index >= _size)
-		index = 0;
-	while (index--)
-	{
-		cur = cur->next;
-	}
-	cur->next=node//well ,I need overload '=' here
+	LinkedNode* cur = node_search(num);
+	if (cur == nullptr)
+		std::cout << "查无此人\n";
+	*(cur->next) = node;//well ,I need overload '=' here
 }
 void Linkedlist::print_list()
 {
