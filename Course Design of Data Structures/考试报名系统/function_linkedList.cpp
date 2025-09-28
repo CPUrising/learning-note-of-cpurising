@@ -33,21 +33,78 @@ LinkedNode& LinkedNode::operator=(const LinkedNode& other) {
 	}
 	return *this;
 }
-std::istream& operator>>(std::istream& is, LinkedNode& node) {
-	is >> node.number;
-	is >> node.name;
-	std::string sex;
-	is >> sex;
-	if (sex == "女")
-		node.sex = 1;
-	else
-		node.sex = 0;
-	is >> node.age;
-	is >> node.application;
-	// 不需要处理next指针，输入操作通常只处理当前节点的数据
-	return is;  // 返回输入流，支持链式输入
-}
+bool safe_read_node(std::istream& is, LinkedNode& node) {
+	try {
+		// 读取考号
+		if (!(is >> node.number)) {
+			throw std::runtime_error("考号输入错误，请输入整数");
+		}
 
+		// 读取姓名
+		if (!(is >> node.name)) {
+			throw std::runtime_error("姓名输入错误");
+		}
+
+		// 读取性别
+		std::string sex;
+		if (!(is >> sex)) {
+			throw std::runtime_error("性别输入错误");
+		}
+		if (sex == "女") {
+			node.sex = 1;
+		}
+		else if (sex == "男") {
+			node.sex = 0;
+		}
+		else {
+			throw std::runtime_error("性别输入无效，请输入'男'或'女'");
+		}
+
+		// 读取年龄
+		if (!(is >> node.age)) {
+			throw std::runtime_error("年龄输入错误，请输入整数");
+		}
+		if (node.age <= 0 || node.age > 150) {
+			throw std::runtime_error("年龄值无效，必须在1-150之间");
+		}
+
+		// 读取报考类别
+		if (!(is >> node.application)) {
+			throw std::runtime_error("报考类别输入错误");
+		}
+
+		return true;
+	}
+	catch (const std::exception& e) {
+		std::cerr << "输入错误: " << e.what() << std::endl;
+
+		// 清除错误状态并忽略当前行剩余内容，以便下次输入
+		is.clear();
+		is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+		return false;
+	}
+}
+bool safe_read_num(std::istream& is, std::string num)
+{
+	try {
+		if (!(is >> num)) {
+			throw std::runtime_error("编号输入失败");
+		}
+		// 新增：校验编号是否全为数字
+		for (char c : num) {
+			if (!std::isdigit(static_cast<unsigned char>(c))) {
+				throw std::runtime_error("输入错误，请输入正确格式考号: \n");
+			}
+		}
+	}
+	catch (const std::exception& e) {
+		std::cerr << "输入错误: " << e.what() << std::endl;
+		is.clear();
+		is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		return false;
+	}
+}
 Linkedlist::Linkedlist()
 {
 	_dummyHead = new LinkedNode;
@@ -112,8 +169,10 @@ void Linkedlist::node_putback(const LinkedNode& node)
 void Linkedlist::node_insert(int index, const LinkedNode& node)
 {
 	LinkedNode* cur = _dummyHead;
-	if (index < 0 || index >= _size)
+	if (index < 0 || index > _size)
 		index = 0;
+	while(--index)
+		cur= cur->next;
 	LinkedNode* newNode = new LinkedNode(node);
 	newNode->next = cur->next;
 	cur->next = newNode;
@@ -121,9 +180,14 @@ void Linkedlist::node_insert(int index, const LinkedNode& node)
 }
 void Linkedlist::node_delete(std::string num)
 {
-	LinkedNode* cur = node_search(num);
+	LinkedNode* cur = _dummyHead;
+	while (cur->next != nullptr && cur->next->number != num) {
+		cur = cur->next;
+	}
 	if (cur->next == nullptr)
+	{
 		std::cout << "查无此人\n";
+	}
 	else
 	{
 		LinkedNode* temp = cur->next;
@@ -136,10 +200,7 @@ void Linkedlist::node_delete(std::string num)
 void Linkedlist::node_edit(std::string num, const LinkedNode& node)
 {
 	LinkedNode* cur = node_search(num);
-	if (cur == nullptr)
-		std::cout << "查无此人\n";
-	else
-		*(cur->next) = node;
+	*cur = node;
 }
 void Linkedlist::print_list()
 {

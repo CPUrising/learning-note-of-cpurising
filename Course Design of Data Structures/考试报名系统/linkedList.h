@@ -16,7 +16,9 @@ public:
 	LinkedNode(const LinkedNode& other);
 	LinkedNode& operator=(const LinkedNode& other);
 };
-std::istream& operator>>(std::istream& is, LinkedNode& node);
+
+bool safe_read_node(std::istream& is, LinkedNode& node);
+bool safe_read_num(std::istream& is, std::string name);
 
 class Linkedlist
 {
