@@ -1,7 +1,7 @@
 #pragma once
 #include<iostream>
 #include<iomanip>
-const int SPACE = 2;
+const int SPACE = 15;
 class LinkedNode
 {
 public:

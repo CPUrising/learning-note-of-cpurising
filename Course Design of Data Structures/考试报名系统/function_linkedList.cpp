@@ -63,13 +63,19 @@ Linkedlist::~Linkedlist()
 		delete temp;
 	}
 }
-void Linkedlist::print_head_row()
+void Linkedlist::print_head_row()//care the space
 {
-	std::cout << "考号" << std::setw(SPACE) << "姓名" << std::setw(SPACE) << "性别" << std::setw(SPACE) << "年龄" << std::setw(SPACE) << "报考类别\n";
+	std::cout << std::setiosflags(std::ios::left)<<std::setw(SPACE) << "考号" << std::setw(SPACE) << "姓名" << std::setw(SPACE) << "性别" << std::setw(SPACE) << "年龄" << std::setw(SPACE) << "报考类别"<< std::endl;
 }
-void Linkedlist::print_person(const LinkedNode& node)
+void Linkedlist::print_person(const LinkedNode& node)//care the space
 {
-	std::cout << node.number << std::setw(SPACE) << node.name << std::setw(SPACE) << node.sex << std::setw(SPACE) << node.age << std::setw(SPACE) << node.application << std::endl;
+	std::cout << std::setiosflags(std::ios::left) << std::setw(SPACE) << node.number << std::setw(SPACE) << node.name;
+	std::cout<< std::setw(SPACE);
+	if (node.sex)
+		std::cout << "女"; 
+	else 
+		std::cout << "男"; 
+	std::cout << std::setw(SPACE) << node.age << std::setw(SPACE) << node.application << std::endl;
 }
 LinkedNode* Linkedlist::node_search(std::string num)//index starts from 0
 {
@@ -133,7 +139,7 @@ void Linkedlist::node_edit(std::string num, const LinkedNode& node)
 	if (cur == nullptr)
 		std::cout << "查无此人\n";
 	else
-		*(cur->next) = node;//well ,I need overload '=' here
+		*(cur->next) = node;
 }
 void Linkedlist::print_list()
 {
@@ -145,4 +151,5 @@ void Linkedlist::print_list()
 		print_person(*cur);
 		cur = cur->next;
 	}
+	std::cout << std::endl;
 }

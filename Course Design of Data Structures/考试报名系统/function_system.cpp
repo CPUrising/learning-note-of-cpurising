@@ -5,13 +5,14 @@ void system_init(LinkedNode &temp, Linkedlist &registerList)
 	std::cout << "首先请建立考生信息系统!\n";
 	std::cout << "请输入考生人数：\n";
 	std::cin >> total;
-	std::cout << "请依次输入考生的考号，姓名，性别，年龄及报考类别：\n";
+	std::cout << "请依次输入考生的考号，姓名，性别，年龄及报考类别：\n";//remember cin error
 	while (total--)
 	{
 		std::cin >> temp;
 		registerList.node_putback(temp);
 	}
-	std::cout << "请选择您要进行的操作（1为插入，2为删除，3为查找，4为修改，0为取消操作）\n";
+	std::cout<<std::endl;
+	std::cout << "请选择您要进行的操作（1为插入，2为删除，3为查找，4为修改，0为取消操作）\n\n";
 }
 void system_insert(LinkedNode& temp, Linkedlist& registerList)
 {
@@ -54,7 +55,7 @@ void system_loop(LinkedNode &temp, Linkedlist &registerList)
 	while(2077)
 	{
 		char choice;
-		std::cout << "请选择您要进行的操作：\n";
+		std::cout << "请选择您要进行的操作：";
 		std::cin >> choice;
 		if (choice == '0')
 			break;
