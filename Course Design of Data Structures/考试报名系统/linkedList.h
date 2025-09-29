@@ -18,7 +18,7 @@ public:
 };
 
 bool safe_read_node(std::istream& is, LinkedNode& node);
-bool safe_read_num(std::istream& is, std::string name);
+bool safe_read_num(std::istream& is, std::string& name);
 
 class Linkedlist
 {
@@ -28,6 +28,7 @@ private:
 public:
 	Linkedlist();
 	~Linkedlist();
+	int get_size();
 	void print_head_row();
 	void print_person(const LinkedNode& node);
 	LinkedNode* node_search(std::string num);//search "position"

@@ -1,20 +1,24 @@
-3
+5
 3 aoa 男 20 taman
 1 yua 女 20 加农欧诺
 2 kiramei 女 20 宏观高看
+4 aiyanami 女 16 eva0
+5 碇真元 男 16 eva1
 
 2
 1
 
 1
 2
-2 kiramei 女 20 宏观高看
+1 yua 女 20 加农欧诺
 
 3
 2
 
 4
 1
-2 kiramei 女 20 宏观高看
+1 yua 女 20 大魔王
+
+2
 
 0

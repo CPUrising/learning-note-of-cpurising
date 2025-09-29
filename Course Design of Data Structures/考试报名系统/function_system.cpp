@@ -25,10 +25,17 @@ void system_insert(LinkedNode& temp, Linkedlist& registerList) {
 	std::cout << "请输入要插入的考生的位置：\n";
 
 	// 处理位置输入的异常
-	while (!(std::cin >> index)) {
-		std::cerr << "输入错误，请输入整数: ";
-		std::cin.clear();
-		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	while (1) {//danger ! N0 limits
+		if (!(std::cin >> index))
+		{
+			std::cout << "输入错误，请输入整数: ";
+			std::cin.clear();
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		}
+		else if (index<0 || index>registerList.get_size()+1)
+			std::cout << "插入位置超过范围，请重新输入：";
+		else
+			break;
 	}
 
 	std::cout << "请依次输入要插入的考生的考号，姓名，性别(男/女)，年龄及报考类别：\n";
@@ -44,7 +51,7 @@ void system_find(Linkedlist& registerList)
 {
 	std::string num;
 	std::cout << "请输入要查找的考生的考号：\n";
-	std::cin >> num;
+	while (!safe_read_num(std::cin, num)) {}
 	std::cout << "查找的考生的信息：\n";
 	registerList.node_find(num);
 	registerList.print_list();
@@ -53,11 +60,7 @@ void system_delete(Linkedlist& registerList)//print problem
 {
 	std::string num;
 	std::cout << "请输入要删除的考生的考号：\n";
-	while (!(std::cin >> num)) {
-		std::cerr << "输入错误，请输入正确格式考号: ";
-		std::cin.clear();
-		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-	}
+	while (!safe_read_num(std::cin, num)) {}
 	std::cout << "您删除的考生信息是：\n";
 	registerList.node_delete(num);
 	registerList.print_list();
@@ -66,12 +69,10 @@ void system_edit(LinkedNode& temp, Linkedlist& registerList)
 {
 	std::string num;
 	std::cout << "请输入要修改的考生的考号：\n";
-	while (!safe_read_num(std::cin, num)) {
-		std::cerr << "输入错误，请输入正确格式考号: \n";
-	}
+	while (!safe_read_num(std::cin, num)) {}
 	if (registerList.node_search(num) == nullptr)
 	{
-		std::cout << "查无此人\n";
+		std::cout << "查无此人\n\n";
 		return;
 	}
 	std::cout << "请依次输入要修改的考生的考号，姓名，性别(男/女)，年龄及报考类别：\n";

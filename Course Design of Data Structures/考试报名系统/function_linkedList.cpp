@@ -85,21 +85,21 @@ bool safe_read_node(std::istream& is, LinkedNode& node) {
 		return false;
 	}
 }
-bool safe_read_num(std::istream& is, std::string num)
+bool safe_read_num(std::istream& is, std::string &num)
 {
 	try {
 		if (!(is >> num)) {
-			throw std::runtime_error("编号输入失败");
+			throw std::runtime_error("考号输入失败");
 		}
 		// 新增：校验编号是否全为数字
 		for (char c : num) {
 			if (!std::isdigit(static_cast<unsigned char>(c))) {
-				throw std::runtime_error("输入错误，请输入正确格式考号: \n");
+				throw std::runtime_error("请输入正确格式考号:");
 			}
 		}
 	}
 	catch (const std::exception& e) {
-		std::cerr << "输入错误: " << e.what() << std::endl;
+		std::cerr << "输入错误," << e.what() << std::endl;
 		is.clear();
 		is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		return false;
@@ -119,6 +119,10 @@ Linkedlist::~Linkedlist()
 		cur = cur->next;
 		delete temp;
 	}
+}
+int Linkedlist::get_size()
+{
+	return _size;
 }
 void Linkedlist::print_head_row()//care the space
 {
@@ -169,8 +173,6 @@ void Linkedlist::node_putback(const LinkedNode& node)
 void Linkedlist::node_insert(int index, const LinkedNode& node)
 {
 	LinkedNode* cur = _dummyHead;
-	if (index < 0 || index > _size)
-		index = 0;
 	while(--index)
 		cur= cur->next;
 	LinkedNode* newNode = new LinkedNode(node);
