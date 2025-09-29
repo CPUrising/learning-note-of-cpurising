@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36414.22 d17.14
+VisualStudioVersion = 17.14.36414.22
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Course Design of Data Structures", "Course Design of Data Structures\Course Design of Data Structures.vcxproj", "{68888F59-DB22-42E7-B7DF-6C9F2EE7BBF8}"
 EndProject
