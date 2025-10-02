@@ -6,7 +6,10 @@
 
 int main() {
     //a file to be a string
-    std::ifstream file("example.txt");
+    std::string filename;
+    std::cout << "Input file name to be read (e.g., stock_data.txt):\n";
+    std::getline(std::cin, filename);
+    std::ifstream file(filename);
     if (!file.is_open()) {
         std::cerr << "Failed to open the file" << std::endl;
         return 0;
