@@ -1,5 +1,5 @@
 #include"system.h"
-int main()//well ,I haven't solve everywhere if cin wrong data:all cin
+int main()
 {
 	Linkedlist registerList;
 	LinkedNode temp;
