@@ -49,37 +49,66 @@ Linkedlist::~Linkedlist()
 		delete temp;
 	}
 }
-LinkedNode* Linkedlist::node_search(int num)//index starts from 0
-{
-	LinkedNode* cur = _dummyHead->next;
-	while (cur != nullptr&&cur->num!= num)
-		cur = cur->next;
-	if (cur == nullptr)
-	{
-		return nullptr;
-	}
-	return cur;
-}
-void Linkedlist::node_putback(const LinkedNode& node)
+void Linkedlist::node_pushback(int num)
 {
 	LinkedNode* cur = _dummyHead;
 	while (cur->next != nullptr)
 	{
 		cur = cur->next;
 	}
-	LinkedNode* newNode = new LinkedNode(node);
+	LinkedNode* newNode = new LinkedNode(num);
 	cur->next = newNode;
+}
+void Linkedlist::node_pushback_loop()
+{
+	int n;
+	LinkedNode* cur = _dummyHead;
+	while(1)
+	{
+		std::cin >> n;
+		if (n == -1)
+			break;
+		node_pushback(n);
+	}
+}
+void Linkedlist::sorted(Linkedlist& s1, Linkedlist& s2, Linkedlist& s3)//to be repaired
+{
+	s3._dummyHead->next = nullptr;
+	LinkedNode* p1 = s1._dummyHead->next;
+	LinkedNode* p2 = s2._dummyHead->next;
+	int lastAdded = -1; 
+
+	while (p1 != nullptr && p2 != nullptr)
+	{
+		if (p1->num == p2->num) {
+			if (p1->num != -1) {
+				s3.node_pushback(p1->num);
+				lastAdded = p1->num;
+			}
+			p1 = p1->next;
+			p2 = p2->next;
+		}
+		else if (p1->num < p2->num) {
+			p1 = p1->next;
+		}
+		else {
+			p2 = p2->next;
+		}
+	}
 }
 void Linkedlist::print_list()//no space after last node
 {
 	LinkedNode* cur = _dummyHead->next;
-	std::cout << std::endl;
-	while (cur->next != nullptr)
+	if (cur == nullptr) {
+		std::cout << "NULL" << std::endl;
+		return;
+	}
+	while (cur->next!= nullptr)
 	{
 		std::cout << cur->num << ' ';
 		cur = cur->next;
 	}
-	std::cout << cur->num << ' ';
+	std::cout << cur->num;
 
 	std::cout << std::endl;
 }

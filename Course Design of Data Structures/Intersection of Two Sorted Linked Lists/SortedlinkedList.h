@@ -24,8 +24,8 @@ private:
 public:
 	Linkedlist();
 	~Linkedlist();
-	LinkedNode* node_search(int num);//search "position"
-	void node_find(int num);//find and print
-	void node_putback(const LinkedNode& node);
+	void node_pushback(int num);
+	void node_pushback_loop();
+	void sorted(Linkedlist& s1, Linkedlist& s2, Linkedlist& s3);
 	void print_list();
 };
