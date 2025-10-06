@@ -180,7 +180,7 @@ void Linkedlist::node_insert(int index, const LinkedNode& node)
 	cur->next = newNode;
 	_size++;
 }
-void Linkedlist::node_delete(std::string num)
+void Linkedlist::node_delete(std::string num)//find the node before the one to be deleted
 {
 	LinkedNode* cur = _dummyHead;
 	while (cur->next != nullptr && cur->next->number != num) {

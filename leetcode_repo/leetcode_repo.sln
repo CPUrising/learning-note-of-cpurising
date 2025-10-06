@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "0_leetcode_repo", "leetcode
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LCR 187. 破冰游戏_约瑟夫环问题", "LCR 187. 破冰游戏_约瑟夫环问题\LCR 187. 破冰游戏_约瑟夫环问题.vcxproj", "{0E4075D1-D7CF-4552-B7A5-A0B1F3E258A1}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "206. 反转链表", "206. 反转链表\206. 反转链表.vcxproj", "{52397930-EBBD-4C7C-A6E2-A99972B735C3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -31,6 +33,14 @@ Global
 		{0E4075D1-D7CF-4552-B7A5-A0B1F3E258A1}.Release|x64.Build.0 = Release|x64
 		{0E4075D1-D7CF-4552-B7A5-A0B1F3E258A1}.Release|x86.ActiveCfg = Release|Win32
 		{0E4075D1-D7CF-4552-B7A5-A0B1F3E258A1}.Release|x86.Build.0 = Release|Win32
+		{52397930-EBBD-4C7C-A6E2-A99972B735C3}.Debug|x64.ActiveCfg = Debug|x64
+		{52397930-EBBD-4C7C-A6E2-A99972B735C3}.Debug|x64.Build.0 = Debug|x64
+		{52397930-EBBD-4C7C-A6E2-A99972B735C3}.Debug|x86.ActiveCfg = Debug|Win32
+		{52397930-EBBD-4C7C-A6E2-A99972B735C3}.Debug|x86.Build.0 = Debug|Win32
+		{52397930-EBBD-4C7C-A6E2-A99972B735C3}.Release|x64.ActiveCfg = Release|x64
+		{52397930-EBBD-4C7C-A6E2-A99972B735C3}.Release|x64.Build.0 = Release|x64
+		{52397930-EBBD-4C7C-A6E2-A99972B735C3}.Release|x86.ActiveCfg = Release|Win32
+		{52397930-EBBD-4C7C-A6E2-A99972B735C3}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
