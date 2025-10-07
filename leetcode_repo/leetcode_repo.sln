@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LCR 187. 破冰游戏_约�
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "206. 反转链表", "206. 反转链表\206. 反转链表.vcxproj", "{52397930-EBBD-4C7C-A6E2-A99972B735C3}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "142. 环形链表 II", "142. 环形链表 II\142. 环形链表 II.vcxproj", "{E2AEDA4B-BDF5-4A49-B73E-8683A699611C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -41,6 +43,14 @@ Global
 		{52397930-EBBD-4C7C-A6E2-A99972B735C3}.Release|x64.Build.0 = Release|x64
 		{52397930-EBBD-4C7C-A6E2-A99972B735C3}.Release|x86.ActiveCfg = Release|Win32
 		{52397930-EBBD-4C7C-A6E2-A99972B735C3}.Release|x86.Build.0 = Release|Win32
+		{E2AEDA4B-BDF5-4A49-B73E-8683A699611C}.Debug|x64.ActiveCfg = Debug|x64
+		{E2AEDA4B-BDF5-4A49-B73E-8683A699611C}.Debug|x64.Build.0 = Debug|x64
+		{E2AEDA4B-BDF5-4A49-B73E-8683A699611C}.Debug|x86.ActiveCfg = Debug|Win32
+		{E2AEDA4B-BDF5-4A49-B73E-8683A699611C}.Debug|x86.Build.0 = Debug|Win32
+		{E2AEDA4B-BDF5-4A49-B73E-8683A699611C}.Release|x64.ActiveCfg = Release|x64
+		{E2AEDA4B-BDF5-4A49-B73E-8683A699611C}.Release|x64.Build.0 = Release|x64
+		{E2AEDA4B-BDF5-4A49-B73E-8683A699611C}.Release|x86.ActiveCfg = Release|Win32
+		{E2AEDA4B-BDF5-4A49-B73E-8683A699611C}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
