@@ -39,7 +39,7 @@ git add .
 
 \# 第二步：提交并写备注（说明这次更新了什么，比如“新增排序作业”）
 
-git commit -m "2024.9.25 新增排序作业：冒泡排序实现"
+git push origin main
 ```
 
 ✅ 提示：如果只想上传单个文件（比如只传 `sort.c`），可以把 `git add .` 换成 `git add sort.c`。
