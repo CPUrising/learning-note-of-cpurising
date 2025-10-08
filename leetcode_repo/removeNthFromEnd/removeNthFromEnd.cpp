@@ -17,8 +17,21 @@ public:
         ListNode dummyHead;
         dummyHead.next = head;
         ListNode* slow = &dummyHead;
-        ListNode* fast = slow+n;
+        ListNode* fast = slow;
 
+        for (int i = 0; i < n; ++i) {
+            fast = fast->next;
+        }
+
+        while (fast->next != nullptr) {
+            fast = fast->next;
+            slow = slow->next;
+        }
+
+        ListNode* toDelete = slow->next;
+        slow->next = slow->next->next;
+        delete toDelete;
+        return dummyHead.next;
     }
 };
 
@@ -76,13 +89,15 @@ void testCase(int arr[], int size, int n) {
 }
 
 int main() {
+
+    // 测试用例2: 删除头节点
+    int arr2[] = { 1, 2 };
+    testCase(arr2, 2, 1);
     // 测试用例1: 正常情况
     int arr1[] = { 1, 2, 3, 4, 5 };
     testCase(arr1, 5, 2);
 
-    // 测试用例2: 删除头节点
-    int arr2[] = { 1, 2 };
-    testCase(arr2, 2, 2);
+    
 
     // 测试用例3: 删除尾节点
     int arr3[] = { 1, 2, 3 };
