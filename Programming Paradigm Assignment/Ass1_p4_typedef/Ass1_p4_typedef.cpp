@@ -18,13 +18,14 @@ Practice::Practice()
 }
 void Practice::print_Practice()
 {
-	cout << s1 << s2 << n;
+	cout << s1 << s2 << n<<endl;
 }
 int main()
 {
 	typedef struct Practice pra;
 	pra obj;
 	pra* p = &obj;
+	p->print_Practice();
 	p->s1 = "Programming Paradigm ";
 	p->s2 = "Assignment Problem ";
 	p->n = 4;

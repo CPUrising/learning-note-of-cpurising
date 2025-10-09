@@ -3,10 +3,12 @@
 using namespace std;
 void print_star(string*s)
 {
+	(*s)[1] = 'H';
 	cout << "print_star " << *s << endl;
 }
 void print_reference(string& s)
 {
+	s[2] = 'I';
 	cout << "print_reference " << s << endl;
 }
 int main()
