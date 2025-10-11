@@ -13,10 +13,20 @@ Ass1_p5_array:
 
 read files 
 
-files->string
+change files to string
 
-string->number
+change string to number
+
+###### Programming Paradigm
+
+Map_Usage：
+
+//define a iterator of map
 
 
+
+vector_find:
+
+const vector and return pointer of vector
 
 
