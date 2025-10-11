@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36518.9 d17.14
+VisualStudioVersion = 17.14.36518.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Propositional Logic Inference", "Propositional Logic Inference\Propositional Logic Inference.vcxproj", "{51FD239B-A4AB-4157-8779-6AE2E6615151}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Simple Logical Operations", "Simple Logical Operations\Simple Logical Operations.vcxproj", "{A0D4887F-5D53-42C9-B2DC-B22418E41835}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Truth&NF Generator", "Truth&NF Generator\Truth&NF Generator.vcxproj", "{BA15DD76-ACFD-4724-B734-5D81FD443136}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +25,22 @@ Global
 		{51FD239B-A4AB-4157-8779-6AE2E6615151}.Release|x64.Build.0 = Release|x64
 		{51FD239B-A4AB-4157-8779-6AE2E6615151}.Release|x86.ActiveCfg = Release|Win32
 		{51FD239B-A4AB-4157-8779-6AE2E6615151}.Release|x86.Build.0 = Release|Win32
+		{A0D4887F-5D53-42C9-B2DC-B22418E41835}.Debug|x64.ActiveCfg = Debug|x64
+		{A0D4887F-5D53-42C9-B2DC-B22418E41835}.Debug|x64.Build.0 = Debug|x64
+		{A0D4887F-5D53-42C9-B2DC-B22418E41835}.Debug|x86.ActiveCfg = Debug|Win32
+		{A0D4887F-5D53-42C9-B2DC-B22418E41835}.Debug|x86.Build.0 = Debug|Win32
+		{A0D4887F-5D53-42C9-B2DC-B22418E41835}.Release|x64.ActiveCfg = Release|x64
+		{A0D4887F-5D53-42C9-B2DC-B22418E41835}.Release|x64.Build.0 = Release|x64
+		{A0D4887F-5D53-42C9-B2DC-B22418E41835}.Release|x86.ActiveCfg = Release|Win32
+		{A0D4887F-5D53-42C9-B2DC-B22418E41835}.Release|x86.Build.0 = Release|Win32
+		{BA15DD76-ACFD-4724-B734-5D81FD443136}.Debug|x64.ActiveCfg = Debug|x64
+		{BA15DD76-ACFD-4724-B734-5D81FD443136}.Debug|x64.Build.0 = Debug|x64
+		{BA15DD76-ACFD-4724-B734-5D81FD443136}.Debug|x86.ActiveCfg = Debug|Win32
+		{BA15DD76-ACFD-4724-B734-5D81FD443136}.Debug|x86.Build.0 = Debug|Win32
+		{BA15DD76-ACFD-4724-B734-5D81FD443136}.Release|x64.ActiveCfg = Release|x64
+		{BA15DD76-ACFD-4724-B734-5D81FD443136}.Release|x64.Build.0 = Release|x64
+		{BA15DD76-ACFD-4724-B734-5D81FD443136}.Release|x86.ActiveCfg = Release|Win32
+		{BA15DD76-ACFD-4724-B734-5D81FD443136}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
