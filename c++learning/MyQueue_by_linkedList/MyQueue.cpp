@@ -1,4 +1,3 @@
-//https://leetcode.cn/problems/implement-queue-using-stacks/
 #include <iostream>
 #include <cassert>
 #include <stdexcept> // 用于异常处理
