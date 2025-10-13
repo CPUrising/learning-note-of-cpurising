@@ -20,7 +20,9 @@ void check(stack<int>& value, stack<char>& opter);
 bool checkParentheses(const string& formula);       // 检查括号匹配
 bool checkOperatorPosition(const string& formula);  // 检查运算符位置
 bool isEmptyFormula(const string& formula);         // 检查公式是否为空
-
+// 检测并处理输入中的#符号（#是系统终止符，不允许用户输入）
+bool checkIllegalCharacters(const string& formula);
+bool checkConsecutiveLetters(const string& formula);
 int main()
 {
     priority['('] = 6;
@@ -38,20 +40,25 @@ int main()
     cout << "**         欢迎使用逻辑运算器        **\n";
     cout << "**   (计算真值表,合取范式,析取范式)  **\n";
     cout << "**                                   **\n";
-    cout << "**              ！表示非            **\n";
+    cout << "**              !表示非            **\n";
     cout << "**              &表示合取           **\n";
     cout << "**              |表示析取           **\n";
     cout << "**             ^表示蕴含            **\n";
     cout << "**             ~表示等价            **\n";
     cout << "**                                   **\n";
     cout << "***************************************\n\n";
-
-    char continueFlag;
+    char continueFlag = 'y';
     do {
         cout << "请输入合法的命题公式: " << endl;
         string formula;
         cin >> formula;
 
+        if (!checkIllegalCharacters(formula)) {
+            continue; // 存在非法符号，直接要求重新输入
+        }
+        if (!checkConsecutiveLetters(formula)) {
+            continue; // 连续的字母，杀
+        }
         // 语法检查
         if (isEmptyFormula(formula)) {
             cout << "错误: 公式不能为空!" << endl;
@@ -156,12 +163,51 @@ int main()
     cout << "感谢使用，程序已退出！" << endl;
     return 0;
 }
-
+bool checkConsecutiveLetters(const string& formula) {
+    for (size_t i = 1; i < formula.length(); ++i) {
+        // 判断当前字符和前一个字符是否都是字母
+        bool prevIsLetter = ((formula[i - 1] >= 'a' && formula[i - 1] <= 'z') ||
+            (formula[i - 1] >= 'A' && formula[i - 1] <= 'Z'));
+        bool currIsLetter = ((formula[i] >= 'a' && formula[i] <= 'z') ||
+            (formula[i] >= 'A' && formula[i] <= 'Z'));
+        if (prevIsLetter && currIsLetter) {
+            cout << "错误：存在连续字母！请在字母间添加运算符后重新输入。" << endl;
+            return false;
+        }
+    }
+    return true;
+}
 // 检查是否为空公式
 bool isEmptyFormula(const string& formula) {
     return formula.empty();
 }
+bool checkIllegalCharacters(const string& formula) {
+    // 遍历公式中的每个字符
+    for (char c : formula) {
+        // 合法字符判断：3类合法情况
+        bool isLegal = false;
+        // 1. 命题变元（a-z 或 A-Z）
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+            isLegal = true;
+        }
+        // 2. 允许的运算符（! & | ^ ~）
+        else if (c == '!' || c == '&' || c == '|' || c == '^' || c == '~') {
+            isLegal = true;
+        }
+        // 3. 允许的括号（()）
+        else if (c == '(' || c == ')') {
+            isLegal = true;
+        }
 
+        // 若存在非法字符，立即提示并返回false
+        if (!isLegal) {
+            cout << "错误：检测到非法符号！请重新输入" << endl;
+            return false;
+        }
+    }
+    // 所有字符均合法
+    return true;
+}
 // 检查括号匹配
 bool checkParentheses(const string& formula) {
     stack<char> st;
