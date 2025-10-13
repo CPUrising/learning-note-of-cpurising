@@ -123,9 +123,10 @@ int main() {
         std::cout << "find3_5 - Value 30 not found in int array" << std::endl;
     }
     //4.测试空vector
-    //vector<string> svec;
-    //string* it = find3_5(svec.data(), svec.data() + svec.size(), "0");
+    vector<string> svec;
+    string* it = find3_5(svec.data(), svec.data() + svec.size(), string("0"));//"0"can't use ,string() is in need
     // 添加find4的测试案例（保持不变）
+    cout << "\nTesting find3_5 function for valid done";
     std::cout << "\nTesting find4 function:" << std::endl;
 
     auto it_vec = find4(numbers.begin(), numbers.end(), 999);
