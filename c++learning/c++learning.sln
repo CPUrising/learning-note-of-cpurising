@@ -17,6 +17,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MyQueue_by_array", "MyQueue
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MyQueue_by_linkedList", "MyQueue_by_linkedList\MyQueue_by_linkedList.vcxproj", "{277888EB-E8E2-40B6-8041-1A0B1005C46C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "priority_queue", "priority_queue\priority_queue.vcxproj", "{701A6737-857E-45A5-B7EB-3698D08A05E4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -81,6 +83,14 @@ Global
 		{277888EB-E8E2-40B6-8041-1A0B1005C46C}.Release|x64.Build.0 = Release|x64
 		{277888EB-E8E2-40B6-8041-1A0B1005C46C}.Release|x86.ActiveCfg = Release|Win32
 		{277888EB-E8E2-40B6-8041-1A0B1005C46C}.Release|x86.Build.0 = Release|Win32
+		{701A6737-857E-45A5-B7EB-3698D08A05E4}.Debug|x64.ActiveCfg = Debug|x64
+		{701A6737-857E-45A5-B7EB-3698D08A05E4}.Debug|x64.Build.0 = Debug|x64
+		{701A6737-857E-45A5-B7EB-3698D08A05E4}.Debug|x86.ActiveCfg = Debug|Win32
+		{701A6737-857E-45A5-B7EB-3698D08A05E4}.Debug|x86.Build.0 = Debug|Win32
+		{701A6737-857E-45A5-B7EB-3698D08A05E4}.Release|x64.ActiveCfg = Release|x64
+		{701A6737-857E-45A5-B7EB-3698D08A05E4}.Release|x64.Build.0 = Release|x64
+		{701A6737-857E-45A5-B7EB-3698D08A05E4}.Release|x86.ActiveCfg = Release|Win32
+		{701A6737-857E-45A5-B7EB-3698D08A05E4}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
