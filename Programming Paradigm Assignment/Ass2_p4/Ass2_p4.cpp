@@ -69,9 +69,8 @@ char intToChar(int val) {
 	}
 }
 unsigned long long pToDecimal(const string& k, int p) {
-	unsigned long long sum = 0; // 初始化sum，避免随机值
-	unsigned long long exp = 1; // 用unsigned long long避免溢出
-	// 从右往左遍历（低位到高位）
+	unsigned long long sum = 0; 
+	unsigned long long exp = 1; 
 	for (int i = k.size() - 1; i >= 0; --i) {
 		int val = charToInt(k[i]);
 		sum += val * exp;
@@ -112,7 +111,7 @@ string mirror(string&k,int bitPre,int bitAft)
 	removeLeadingZeros(numBaseM);
 	return numBaseM;
 }
-int main()//Don't forget to support '-'minus
+int main()//DO NOT support '-'minus
 {
 	int p, m;
 	string k;
