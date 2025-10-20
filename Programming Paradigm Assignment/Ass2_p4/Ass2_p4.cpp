@@ -18,25 +18,24 @@ void inputNum(int& len)//cin and check
 			break;
 	}
 }
-bool checkString(string& k, int bit)//bit=p,true->right
+bool checkString(string& k, int p)//bit=p,true->right
 {
-	char numEdge = '0' + 9;
-	char charRight= numEdge;
-	char charLeft= '0';
-	if (bit <= 10)
-		numEdge = '0' + bit - 1;
-	else
-	{
-		charRight = 'A' + bit - 11;
-		charLeft = 'A';
+	for (char c : k) {
+		int val;
+		if (isdigit(c)) {
+			val = c - '0';
+		}
+		else if (isupper(c) && c <= 'J') { 
+			val = c - 'A' + 10;
+		}
+		else {
+			return false; 
+		}
+		if (val >= p) { 
+			return false;
+		}
 	}
-	for (char c : k)
-	{
-		if (c >= '0' && c <= numEdge || c >= charLeft && c <= charRight);
-		else
-			return 0;
-	}
-	return 1;
+	return true;
 }
 void inputString(string& k,int bit)
 {
@@ -45,58 +44,72 @@ void inputString(string& k,int bit)
 		cin >> k;
 		if (!cin.good() || !checkString(k,bit))
 		{
-			cin.ignore('\n', 1000);
 			cout << "Please re-enter a string:\n";
+			cin.ignore( 1000,'\n' );
 		}
 		else
 			break;
 	}
 }
 //function for mirror
-char intToChar(int num, int bit)
-{
-	string temp;
-	if (num < 10)
-		return '0' + num;
-	else
-	{
-		return 'A' + bit - 11;
+int charToInt(char c) {
+	if (isdigit(c)) {
+		return c - '0';
+	}
+	else {
+		return c - 'A' + 10;
 	}
 }
-unsigned long long pToDecimal(string& k, int bitPre)
-{
-	unsigned long long sum;
-	for (int i = k.size() - 1, int exp = 1; i >= 0; i--)
-	{
-		sum += k[i] * exp;
-		exp *= bitPre;
+char intToChar(int val) {
+	if (val < 10) {
+		return '0' + val;
+	}
+	else {
+		return 'A' + val - 10;
+	}
+}
+unsigned long long pToDecimal(const string& k, int p) {
+	unsigned long long sum = 0; // 初始化sum，避免随机值
+	unsigned long long exp = 1; // 用unsigned long long避免溢出
+	// 从右往左遍历（低位到高位）
+	for (int i = k.size() - 1; i >= 0; --i) {
+		int val = charToInt(k[i]);
+		sum += val * exp;
+		exp *= p;
 	}
 	return sum;
 }
-string decimalToM(unsigned long long sum, int bitAft)
-{
-	string numBaseM;
-	while (sum >0)
-	{
-		int numBit = sum % bitAft;
-		numBaseM += intToChar(numBit, bitAft);
-		sum /= bitAft;
+string decimalToM(unsigned long long decimal, int m) {
+	if (decimal == 0) {
+		return "0";
 	}
-	return numBaseM;
+	string mStr;
+	while (decimal > 0) {
+		int remainder = decimal % m;
+		mStr += intToChar(remainder);
+		decimal /= m;
+	}
+	return mStr;
 }
-void deleteZero(string& numBaseM)
-{
-	for (int i = numBaseM.size() - 1; numBaseM[i] == '0'; i--)
-	{
-		numBaseM.pop_back();
+void removeLeadingZeros(string& s) {
+	int start = 0;
+	// 找到第一个非零字符
+	while (start < s.size() && s[start] == '0') {
+		start++;
+	}
+	if (start == s.size()) { // 全是零，保留一个0
+		s = "0";
+	}
+	else {
+		s = s.substr(start);//从 start 位置开始，提取从 start 到字符串末尾的所有字符，并赋值给 s。
 	}
 }
 string mirror(string&k,int bitPre,int bitAft)
 {
 	unsigned long long sum = pToDecimal(k, bitPre);
 	string numBaseM = decimalToM(sum, bitAft);
-	deleteZero(numBaseM);
 	reverse(numBaseM.begin(), numBaseM.end());
+	removeLeadingZeros(numBaseM);
 	return numBaseM;
 }
 int main()//Don't forget to support '-'minus
@@ -107,7 +120,7 @@ int main()//Don't forget to support '-'minus
 	inputNum(p);
 	inputNum(m);
 	inputString(k,p);
-	cout << "mirror后的string is\n";
+	cout << "The mirrored string is\n";
 	cout << mirror(k, p, m);
 	
 	return 0;
