@@ -10,7 +10,7 @@ void input(int& len)//cin and check
 		cin >> len;
 		if (!cin.good() || len < 3 || len > 10000)
 		{
-			cin.ignore('\n', 1000);
+			cin.ignore(1000,'\n');
 			cout << "Please re-enter a positive integer (3-10000):\n";
 		}
 		else

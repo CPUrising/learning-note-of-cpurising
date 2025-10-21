@@ -11,7 +11,7 @@ void inputNum(int& len)//cin and check
 		cin >> len;
 		if (!cin.good() || len < 2 || len > 20)
 		{
-			cin.ignore('\n', 1000);
+			cin.ignore(1000,'\n');
 			cout << "Please re-enter a positive integer (2-20):\n";
 		}
 		else
