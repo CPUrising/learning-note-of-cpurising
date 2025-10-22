@@ -61,3 +61,22 @@ char intToChar(int val) {
 		return 'A' + val - 10;
 	}
 }
+bool isNum(string& ch) {
+    // 空字符串不是数字
+    if (ch.empty()) return false;
+    // 第一个字符是 '-' 且长度 >1，后面必须全是数字
+    if (ch[0] == '-' && ch.size() > 1) {
+        for (int i = 1; i < ch.size(); i++) {
+            if (!isdigit(ch[i])) return false;
+        }
+        return true;
+    }
+    // 全部字符都是数字
+    for (char c : ch) {
+        if (!isdigit(c)) return false;
+    }
+    return true;
+}
+int stringToInt(string& s) {
+    return stoi(s); // 使用标准库函数，简洁且正确
+}
