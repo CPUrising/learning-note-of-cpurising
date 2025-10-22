@@ -1,14 +1,62 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <stack>
 using namespace std;
 
-// 假设Solution类的定义在此处
 class Solution {
-public:
+public:    
+    bool isNum(string& ch) {
+        // 空字符串不是数字
+        if (ch.empty()) return false;
+        // 第一个字符是 '-' 且长度 >1，后面必须全是数字
+        if (ch[0] == '-' && ch.size() > 1) {
+            for (int i = 1; i < ch.size(); i++) {
+                if (!isdigit(ch[i])) return false;
+            }
+            return true;
+        }
+        // 全部字符都是数字
+        for (char c : ch) {
+            if (!isdigit(c)) return false;
+        }
+        return true;
+    }
+    bool isArithmetic(string& ch) {
+        return ch == "+" || ch == "-" || ch == "*" || ch == "/";
+    }
+    int stringToInt(string& s) {
+        return stoi(s); // 使用标准库函数，简洁且正确
+    }
+    int magicMath(int value1, int value2, string& op)
+    {
+        if (op == "+")
+            return value1 + value2;
+        else if(op =="-")
+            return value2 - value1;
+        else if (op == "*")
+            return value1 * value2;
+        else 
+            return value2 / value1;
+    }
     int evalRPN(vector<string>& tokens) {
-        // 待实现的逆波兰表达式求值逻辑
-        return 0; // 临时返回值
+        stack<int> s;
+        for (int i = 0; i < tokens.size(); i++)
+        {
+            if (isNum(tokens[i]))
+            {
+                s.push(stringToInt(tokens[i]));
+            }
+            else if (isArithmetic(tokens[i]))
+            {
+                int value1 = s.top();
+                s.pop();
+                int value2 = s.top();
+                s.pop();
+                s.push(magicMath(value1, value2, tokens[i]));
+            }
+        }
+        return s.top();
     }
 };
 
