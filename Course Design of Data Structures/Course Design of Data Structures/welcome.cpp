@@ -7,5 +7,6 @@ int main()
 	cout << "This projects includs homework of Course Design of Data Structures." << endl;
 	cout << "So I don't have to save the homework in projects c++ learning," << endl;
 	cout << "and ,I left the track of the past." << endl;
+
 	return 0;
 }
