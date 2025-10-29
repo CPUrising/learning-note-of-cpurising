@@ -16,7 +16,7 @@ int solveMaze(Maze &maze, vector<pair<int, int>> &path)
 	const int dy[] = { 0,1,0,-1 };
 
 	stack <pair<int, int>> s;
-	s.push(start);
+	s.push({ startX, startY });
 	visited[startX][startY] = true;
 	path.push_back(start);
 

@@ -2,7 +2,6 @@
 #include <iostream>
 #include <vector>
 #include <stack>
-#include "solveMaze.cpp"
 using namespace std;
 
 int main() {

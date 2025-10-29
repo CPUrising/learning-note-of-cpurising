@@ -1,8 +1,8 @@
-#ifndef MAZE_H
-#define MAZE_H
-
+#pragma once
 #include <vector>
-#include <utility> // 用于pair
+#include <utility>
+#include <stack>
+#include <iostream>
 
 // 迷宫单元格状态
 enum CellState {
@@ -47,5 +47,4 @@ private:
 	// 生成迷宫的核心函数（私有，仅内部调用）
 	void generateMaze();
 };
-
-#endif // MAZE_H
+int solveMaze(Maze& maze, std::vector<std::pair<int, int>>& path);
