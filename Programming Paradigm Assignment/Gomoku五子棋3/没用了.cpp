@@ -36,6 +36,17 @@ const int SCORE_SLEEP_THREE = 100;   // 眠三(一端空)
 const int SCORE_LIVE_TWO = 10;      // 活二
 const int SCORE_SLEEP_TWO = 5;      // 眠二
 
+// 定义落子结构体
+struct Move {
+    int x, y;
+    Move(int x_, int y_) : x(x_), y(y_) {}
+};
+
+// 候选落子列表
+struct MoveList {
+    vector<Move> moves;
+    int count() const { return moves.size(); }
+};
 // 哈希表相关定义
 enum HashType { HASH_EXACT, HASH_ALPHA, HASH_BETA };
 
@@ -119,8 +130,8 @@ void init_board() {
     }
     board[5][5] = 2;
     board[6][6] = 2;
-    board[6][5] = 2;
-    board[5][6] = 2;
+    board[6][5] = 1;
+    board[5][6] = 1;
     // 初始化当前哈希值（所有位置为空）
     currentHash = 0;
     for (int i = 0; i < BOARD_SIZE; i++) {
@@ -390,87 +401,148 @@ LLS evaluate() {
 }
 
 // 带哈希优化的Alpha-Beta搜索
-LLS alphaBeta(int depth, LLS alpha, LLS beta) {
-    // 先检查哈希表
+
+// 生成候选落子列表（仅考虑有效位置且有邻居的点）
+void getMoves(MoveList& moves, int player) {
+    moves.moves.clear();
+    for (int x = 0; x < BOARD_SIZE; x++) {
+        for (int y = 0; y < BOARD_SIZE; y++) {
+            if (is_valid_pos(x, y) && hasNeighbor(x, y, 2)) {
+                moves.moves.emplace_back(x, y);
+            }
+        }
+    }
+
+    // 若没有候选落子，添加中心区域备选
+    if (moves.count() == 0) {
+        for (int x = 4; x <= 7; x++) {
+            for (int y = 4; y <= 7; y++) {
+                if (is_valid_pos(x, y)) {
+                    moves.moves.emplace_back(x, y);
+                }
+            }
+        }
+    }
+
+    // 按评分排序（提升剪枝效率）
+    sort(moves.moves.begin(), moves.moves.end(), [&](const Move& a, const Move& b) {
+        return scorePosition(a.x, a.y, player) > scorePosition(b.x, b.y, player);
+        });
+}
+// MinMax算法核心（带Alpha-Beta剪枝）
+LLS minMax(int depth, int player, LLS alpha, LLS beta) {
+    // 哈希查找
     LLS hashScore = lookupHash(currentHash, depth, alpha, beta);
     if (hashScore != -2000000000000000001LL) {
         return hashScore;
     }
 
-    // 搜索到最大深度，返回评估值
+    // 到达最大深度，返回当前评分
     if (depth == 0) {
         LLS score = evaluate();
         storeHash(currentHash, depth, score, HASH_EXACT);
         return score;
     }
 
-    // 生成所有可能的走法
-    vector<pair<int, int>> moves;
-    for (int i = 0; i < BOARD_SIZE; i++) {
-        for (int j = 0; j < BOARD_SIZE; j++) {
-            if (is_valid_pos(i, j)) {
-                moves.emplace_back(i, j);
-            }
-        }
-    }
+    // 生成候选落子
+    MoveList moves;
+    getMoves(moves, player);
+    HashType hashType = HASH_ALPHA;
 
-    if (moves.empty()) {
-        LLS score = 0; // 平局
+    // 无候选落子，返回当前评分
+    if (moves.count() == 0) {
+        LLS score = evaluate();
         storeHash(currentHash, depth, score, HASH_EXACT);
         return score;
     }
 
-    LLS bestScore = -1e18;
-    int currentColor = (depth % 2 == 0) ? my_color : (my_color == BLACK ? WHITE : BLACK);
+    int opponent = (player == BLACK) ? WHITE : BLACK;
 
-    for (auto& move : moves) {
-        int x = move.first, y = move.second;
-        // 落子并更新哈希
-        update_board(x, y, currentColor);
-        bool isWin = check_win(x, y, currentColor);
+    // 最大化玩家（AI）
+    if (player == my_color) {
+        LLS maxEval = -1e18;
+        for (const auto& move : moves.moves) {
+            ULL oldHash = currentHash;
 
-        LLS score;
-        if (isWin) {
-            // 胜利得高分
-            score = (currentColor == my_color) ? 1e18 : -1e18;
-        }
-        else {
-            // 递归搜索
-            score = -alphaBeta(depth - 1, -beta, -alpha);
+            // 模拟落子
+            update_board(move.x, move.y, player);
+            bool isWin = check_win(move.x, move.y, player);
+            LLS eval;
+
+            if (isWin) {
+                eval = 1e18; // 获胜评分
+            }
+            else {
+                eval = minMax(depth - 1, opponent, alpha, beta);
+            }
+
+            // 回溯
+            update_board(move.x, move.y, EMPTY);
+            currentHash = oldHash;
+
+            // 更新最大值
+            if (eval > maxEval) {
+                maxEval = eval;
+                if (eval > alpha) {
+                    alpha = eval;
+                    hashType = HASH_EXACT;
+                }
+            }
+
+            // Beta剪枝
+            if (beta <= alpha) {
+                hashType = HASH_BETA;
+                break;
+            }
         }
 
-        // 撤销落子和哈希
-        update_board(x, y, EMPTY);
-
-        if (score > bestScore) {
-            bestScore = score;
-        }
-        if (bestScore > alpha) {
-            alpha = bestScore;
-        }
-        if (alpha >= beta) {
-            break; // Beta剪枝
-        }
+        storeHash(currentHash, depth, maxEval, hashType);
+        return maxEval;
     }
-
-    // 存储哈希表
-    HashType type;
-    if (bestScore <= alpha) {
-        type = HASH_ALPHA;
-    }
-    else if (bestScore >= beta) {
-        type = HASH_BETA;
-    }
+    // 最小化玩家（对手）
     else {
-        type = HASH_EXACT;
+        LLS minEval = 1e18;
+        for (const auto& move : moves.moves) {
+            ULL oldHash = currentHash;
+
+            // 模拟落子
+            update_board(move.x, move.y, player);
+            bool isWin = check_win(move.x, move.y, player);
+            LLS eval;
+
+            if (isWin) {
+                eval = -1e18; // 对手获胜评分
+            }
+            else {
+                eval = minMax(depth - 1, opponent, alpha, beta);
+            }
+
+            // 回溯
+            update_board(move.x, move.y, EMPTY);
+            currentHash = oldHash;
+
+            // 更新最小值
+            if (eval < minEval) {
+                minEval = eval;
+                if (eval < beta) {
+                    beta = eval;
+                    hashType = HASH_EXACT;
+                }
+            }
+
+            // Alpha剪枝
+            if (beta <= alpha) {
+                hashType = HASH_ALPHA;
+                break;
+            }
+        }
+
+        storeHash(currentHash, depth, minEval, hashType);
+        return minEval;
     }
-    storeHash(currentHash, depth, bestScore, type);
-
-    return bestScore;
 }
-
 pair<int, int> get_best_move() {
-    // 优先防御对方即时胜利威胁
+    // 优先防守对手获胜点
     int enemy_color = (my_color == BLACK) ? WHITE : BLACK;
     for (int x = 0; x < BOARD_SIZE; x++) {
         for (int y = 0; y < BOARD_SIZE; y++) {
@@ -479,101 +551,51 @@ pair<int, int> get_best_move() {
                 bool enemy_win = check_win(x, y, enemy_color);
                 update_board(x, y, EMPTY);
                 if (enemy_win) {
-                    debug(("Defend at (" + to_string(x) + "," + to_string(y) + ")").c_str());
                     return { x, y };
                 }
             }
         }
     }
 
-    // 生成候选落子并计算评分
-    vector<pair<LLS, pair<int, int>>> candidateMoves;
-    for (int x = 0; x < BOARD_SIZE; x++) {
-        for (int y = 0; y < BOARD_SIZE; y++) {
-            // 新增条件：位置有效 且 1-2格子内有相邻棋子
-            if (is_valid_pos(x, y) && hasNeighbor(x, y, 2)) {
-                LLS score = scorePosition(x, y, my_color);
-                candidateMoves.emplace_back(score, make_pair(x, y));
-            }
-        }
+    // 生成候选落子
+    MoveList moves;
+    getMoves(moves, my_color);
+    if (moves.count() == 0) {
+        return { 5, 5 }; // 默认中心位置
     }
 
-    // 按评分降序排序（优先高价值位置）
-    // 将原来的排序代码修改为：
-    sort(candidateMoves.begin(), candidateMoves.end(),
-        [](const pair<LLS, pair<int, int>>& a, const pair<LLS, pair<int, int>>& b) {
-            return a.first > b.first;
-        });
-
-    // 限制候选数量（最多6个，减少探索量）
-    int maxCandidates = 6;
-    if (candidateMoves.size() > maxCandidates) {
-        candidateMoves.resize(maxCandidates);
-    }
-
-    // 使用Alpha-Beta搜索从候选中选出最优解
-    int bestX = -1, bestY = -1;
+    // 计算最优落子
     LLS bestScore = -1e18;
+    pair<int, int> bestMove(-1, -1);
     int searchDepth = 4;
 
-    for (const auto& candidate : candidateMoves) {
-        int x = candidate.second.first;
-        int y = candidate.second.second;
+    for (const auto& move : moves.moves) {
+        ULL oldHash = currentHash;
 
-        update_board(x, y, my_color);
-        bool isWin = check_win(x, y, my_color);
+        // 模拟落子
+        update_board(move.x, move.y, my_color);
+        bool isWin = check_win(move.x, move.y, my_color);
         LLS score;
 
         if (isWin) {
-            score = 1e18; // 直接获胜的走法
+            score = 1e18;
         }
         else {
-            score = -alphaBeta(searchDepth - 1, -1e18, 1e18);
+            score = minMax(searchDepth - 1, enemy_color, -1e18, 1e18);
         }
 
-        update_board(x, y, EMPTY);
+        // 回溯
+        update_board(move.x, move.y, EMPTY);
+        currentHash = oldHash;
 
+        // 更新最优解
         if (score > bestScore) {
             bestScore = score;
-            bestX = x;
-            bestY = y;
+            bestMove = { move.x, move.y };
         }
     }
 
-    // 候选搜索找到有效位置
-    if (bestX != -1) {
-        debug(("Optimal move at (" + to_string(bestX) + "," + to_string(bestY) + ")").c_str());
-        return { bestX, bestY };
-    }
-
-    //  fallback策略
-    for (int x = 0; x < BOARD_SIZE; x++) {
-        for (int y = 0; y < BOARD_SIZE; y++) {
-            if (is_valid_pos(x, y) && hasNeighbor(x, y, 1)) {
-                debug(("Near enemy move at (" + to_string(x) + "," + to_string(y) + ")").c_str());
-                return { x, y };
-            }
-        }
-    }
-
-    for (int x = 4; x <= 8; x++) {
-        for (int y = 5; y <= 7; y++) {
-            if (is_valid_pos(x, y)) {
-                return { x, y };
-            }
-        }
-    }
-
-    for (int x = 0; x < BOARD_SIZE; x++) {
-        for (int y = 0; y < BOARD_SIZE; y++) {
-            if (is_valid_pos(x, y)) {
-                debug(("Default move at (" + to_string(x) + "," + to_string(y) + ")").c_str());
-                return { x, y };
-            }
-        }
-    }
-
-    return { -1, -1 };
+    return bestMove;
 }
 
 // 处理START命令
@@ -617,54 +639,25 @@ bool hasNeighbor(int x, int y, int distance ) {
     return false;
 }
 
-// 获取有效候选走法
-vector<pair<int, int>> getMoves() {
-    vector<pair<int, int>> validMoves;
-    // 只考虑已有棋子周围2格内的位置（减少计算量）
-    for (int x = 0; x < BOARD_SIZE; x++) {
-        for (int y = 0; y < BOARD_SIZE; y++) {
-            if (is_valid_pos(x, y) && hasNeighbor(x, y)) {
-                validMoves.emplace_back(x, y);
-            }
-        }
-    }
 
-    // 若无有效走法，默认中心区域
-    if (validMoves.empty()) {
-        for (int x = 4; x <= 7; x++) {
-            for (int y = 4; y <= 7; y++) {
-                if (is_valid_pos(x, y)) {
-                    validMoves.emplace_back(x, y);
-                }
-            }
-        }
-    }
 
-    // 按评分排序（提升Alpha-Beta剪枝效率）
-    sort(validMoves.begin(), validMoves.end(), [&](const pair<int, int>& a, const pair<int, int>& b) {
-        return scorePosition(a.first, a.second, my_color) > scorePosition(b.first, b.second, my_color);
-        });
-
-    return validMoves;
-}
-
-// 打印有效候选走法（调试用）
-void printValidMoves() {
-#if DEBUG_MODE == 1  // 仅调试模式下打印
-    vector<pair<int, int>> moves = getMoves();
-    printf("Valid moves count: %d\n", moves.size());
-    for (auto& move : moves) {
-        printf("(%d, %d) ", move.first, move.second);
-    }
-    printf("\n");
-    fflush(stdout);
-#endif
-}
+//// 打印有效候选走法（调试用）
+//void printValidMoves() {
+//#if DEBUG_MODE == 1  // 仅调试模式下打印
+//    vector<pair<int, int>> moves = getMoves();
+//    printf("Valid moves count: %d\n", moves.size());
+//    for (auto& move : moves) {
+//        printf("(%d, %d) ", move.first, move.second);
+//    }
+//    printf("\n");
+//    fflush(stdout);
+//#endif
+//}
 
 // 处理TURN命令
 void handle_turn() {
     clock_t start_single_time = clock();
-    printValidMoves(); // 仅调试模式下打印
+    //printValidMoves(); // 仅调试模式下打印
 
     // 获取最佳走法
     pair<int, int> move = get_best_move();

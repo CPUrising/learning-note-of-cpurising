@@ -10,7 +10,6 @@
 using namespace std;
 
 bool hasNeighbor(int x, int y, int distance = 2);
-vector<pair<int, int>> getMoves();
 
 #define DEBUG_MODE 1
 
