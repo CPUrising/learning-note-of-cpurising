@@ -9,37 +9,41 @@
 #include <algorithm>
 using namespace std;
 
-// 常量定义
-const int BOARD_SIZE = 12;    // 棋盘尺寸
+bool hasNeighbor(int x, int y, int distance = 2);
+// 调试开关：1=启用调试输出，0=禁用调试输出
+#define DEBUG_MODE 0  // 实际对战时设为0即可关闭所有调试信息
+
+// 棋盘配置
+const int BOARD_SIZE = 12;    // 棋盘大小
 const int BLACK = 1;          // 黑棋
 const int WHITE = 2;          // 白棋
 const int EMPTY = 0;          // 空位
 const int MAX_SINGLE_TIME = 2; // 单步最大时间(秒)
-const int MAX_TOTAL_TIME = 90; // 总最大时间(秒)
+const int MAX_TOTAL_TIME = 90; // 总时间限制(秒)
 const int HASH_SIZE = 1000003; // 哈希表大小(质数)
 using ULL = unsigned long long;
 using LLS = long long;
 
-// 棋型评分常量（数值可根据策略调整）
-const int SCORE_FIVE = 1000000;    // 五子连珠（必胜）
-const int SCORE_LIVE_FOUR = 100000; // 活四（两端空白，必赢）
+// 评分配置（根据连子情况定义分数）
+const int SCORE_FIVE = 1000000;    // 五连子(胜利)
+const int SCORE_LIVE_FOUR = 100000; // 活四(两端空)
 const int SCORE_JUMP_LIVE_FOUR = 90000; // 跳活四
-const int SCORE_RUSH_FOUR = 10000;  // 冲四（一端空白）
-const int SCORE_JUMP_RUSH_FOUR = 9000;  // 跳冲四（跳睡四）
-const int SCORE_LIVE_THREE = 1000;   // 活三（两端空白）
+const int SCORE_RUSH_FOUR = 10000;  // 冲四(一端空)
+const int SCORE_JUMP_RUSH_FOUR = 9000;  // 跳冲四
+const int SCORE_LIVE_THREE = 1000;   // 活三(两端空)
 const int SCORE_JUMP_LIVE_THREE = 900;  // 跳活三
-const int SCORE_SLEEP_THREE = 100;   // 睡三（一端空白）
+const int SCORE_SLEEP_THREE = 100;   // 眠三(一端空)
 const int SCORE_LIVE_TWO = 10;      // 活二
-const int SCORE_SLEEP_TWO = 5;      // 睡二
+const int SCORE_SLEEP_TWO = 5;      // 眠二
 
-// 哈希表条目类型
+// 哈希表相关定义
 enum HashType { HASH_EXACT, HASH_ALPHA, HASH_BETA };
 
-// 哈希表条目结构
+// 哈希表结构
 struct HashEntry {
     ULL key;       // 哈希值(键)
     int depth;     // 搜索深度
-    LLS score;     // 评估分数
+    LLS score;     // 搜索评分
     HashType type; // 条目类型
 };
 
@@ -48,7 +52,7 @@ vector<vector<int>> board(BOARD_SIZE, vector<int>(BOARD_SIZE, EMPTY));
 int my_color = 0;              // AI棋子颜色
 clock_t start_total_time;      // 游戏开始时间
 ULL zobristTable[3][BOARD_SIZE][BOARD_SIZE]; // Zobrist哈希表
-HashEntry* hashTable;          // 缓存哈希表
+HashEntry* hashTable;          // 主哈希表
 ULL currentHash = 0;           // 当前棋盘哈希值
 
 // 生成64位随机数
@@ -67,12 +71,12 @@ void initZobrist() {
         }
     }
 
-    // 初始化哈希缓存表
+    // 初始化哈希表内存
     hashTable = new HashEntry[HASH_SIZE];
     memset(hashTable, 0, sizeof(HashEntry) * HASH_SIZE);
 }
 
-// 查找哈希缓存
+// 查找哈希表
 LLS lookupHash(ULL hash, int depth, LLS alpha, LLS beta) {
     HashEntry& entry = hashTable[hash % HASH_SIZE];
     if (entry.key == hash && entry.depth >= depth) {
@@ -86,10 +90,10 @@ LLS lookupHash(ULL hash, int depth, LLS alpha, LLS beta) {
     return -2000000000000000001LL;
 }
 
-// 存储哈希缓存
+// 存储哈希表
 void storeHash(ULL hash, int depth, LLS score, HashType type) {
     HashEntry& entry = hashTable[hash % HASH_SIZE];
-    // 只存储更深层的搜索结果
+    // 只存储更深层次的搜索结果
     if (entry.depth <= depth) {
         entry.key = hash;
         entry.depth = depth;
@@ -98,19 +102,25 @@ void storeHash(ULL hash, int depth, LLS score, HashType type) {
     }
 }
 
-// 调试输出
+// 调试输出（带开关控制）
 void debug(const char* message) {
+#if DEBUG_MODE == 1  // 仅当DEBUG_MODE为1时才输出调试信息
     printf("DEBUG %s\n", message);
     fflush(stdout);
+#endif
 }
 
-// 初始化棋盘（包含哈希初始化）
+// 初始化棋盘和哈希初始值
 void init_board() {
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
             board[i][j] = EMPTY;
         }
     }
+    board[5][5] = 2;
+    board[6][6] = 2;
+    board[6][5] = 2;
+    board[5][6] = 2;
     // 初始化当前哈希值（所有位置为空）
     currentHash = 0;
     for (int i = 0; i < BOARD_SIZE; i++) {
@@ -129,9 +139,9 @@ bool is_valid_pos(int x, int y) {
     return board[x][y] == EMPTY;
 }
 
-// 更新棋盘并同步哈希值
+// 更新棋盘状态和哈希值
 void update_board(int x, int y, int color) {
-    // 先移除原位置的哈希值（原先是空）
+    // 移除原位置的哈希值（原状态是空）
     currentHash ^= zobristTable[EMPTY][x][y];
     // 添加新棋子的哈希值
     currentHash ^= zobristTable[color][x][y];
@@ -139,27 +149,27 @@ void update_board(int x, int y, int color) {
     board[x][y] = color;
 }
 
-// 辅助函数：检查位置(posx, posy)在方向(dx, dy)上的棋型评分
+// 计算指定位置在某方向的连子评分,和KAMI相比应该没问题
 int scoreDirects(int posx, int posy, int dx, int dy, int player) {
     int opponent = (player == BLACK) ? WHITE : BLACK;
-    int count = 1;          // 当前位置的棋子计入连子数
-    int empty_pos = 0;      // 空白状态（1=单端空，3=两端空）
-    int block = 0;          // 被阻挡次数
+    int count = 1;          // 当前位置的连续子数量
+    int empty_pos = 0;      // 空位状态(1=一端空,3=两端空)
+    int block = 0;          // 被阻挡数
 
-    // 跳跃连子相关变量（处理"101"等间隔连子）
-    int jump_p = 0, jump_n = 0;        // 正/反方向是否有跳跃
-    int count_j_p = 0, count_j_n = 0;  // 跳跃连子数
-    bool block_j_p = false, block_j_n = false; // 跳跃后是否被挡
-    bool empty_j_p = false, empty_j_n = false; // 跳跃后是否空白
+    // 跳连检测变量（如"1 0 1"等间隔连子）
+    int jump_p = 0, jump_n = 0;        // 正/反方向是否有跳连
+    int count_j_p = 0, count_j_n = 0;  // 跳连子数量
+    bool block_j_p = false, block_j_n = false; // 跳连是否被挡
+    bool empty_j_p = false, empty_j_n = false; // 跳连是否有空位
 
-    // -------------------------- 正方向检查（如向右、向下） --------------------------
+    // -------------------------- 正向检测（沿方向递增） --------------------------
     int x = posx + dx;
     int y = posy + dy;
     bool found_empty = false;
 
     while (x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE) {
         if (found_empty && !jump_p) {
-            // 已找到空白，检查是否为跳跃连子（如"1 0 1"）
+            // 找到空位后，检查是否为跳连（如"1 0 1"）
             if (board[x][y] == player) {
                 jump_p = 1;
                 count_j_p++;
@@ -169,7 +179,7 @@ int scoreDirects(int posx, int posy, int dx, int dy, int player) {
             }
         }
         else if (found_empty && jump_p) {
-            // 跳跃后继续检查
+            // 跳连后的连续子检测
             if (board[x][y] == player) {
                 count_j_p++;
             }
@@ -183,9 +193,9 @@ int scoreDirects(int posx, int posy, int dx, int dy, int player) {
             }
         }
         else {
-            // 未找到空白，检查连续连子
+            // 未找到空位，检测连续子
             if (board[x][y] == EMPTY) {
-                empty_pos += 1;  // 单端空白
+                empty_pos += 1;  // 一端空
                 found_empty = true;
             }
             else if (board[x][y] == opponent) {
@@ -193,14 +203,14 @@ int scoreDirects(int posx, int posy, int dx, int dy, int player) {
                 break;
             }
             else {
-                count++;  // 己方连子+1
+                count++;  // 连续子+1
             }
         }
         x += dx;
         y += dy;
     }
 
-    // -------------------------- 反方向检查（如向左、向上） --------------------------
+    // -------------------------- 反向检测（沿方向递减） --------------------------
     x = posx - dx;
     y = posy - dy;
     found_empty = false;
@@ -230,7 +240,7 @@ int scoreDirects(int posx, int posy, int dx, int dy, int player) {
         }
         else {
             if (board[x][y] == EMPTY) {
-                empty_pos += 2;  // 两端空白（累计为3）
+                empty_pos += 2;  // 两端空（总和为3）
                 found_empty = true;
             }
             else if (board[x][y] == opponent) {
@@ -238,15 +248,15 @@ int scoreDirects(int posx, int posy, int dx, int dy, int player) {
                 break;
             }
             else {
-                count++;  // 己方连子+1
+                count++;  // 连续子+1
             }
         }
         x -= dx;
         y -= dy;
     }
 
-    // -------------------------- 棋型判断与评分 --------------------------
-    // 处理跳跃连子
+    // -------------------------- 结果判断逻辑 --------------------------
+    // 处理跳连情况
     if (jump_p || jump_n) {
         int total_jump = count + max(count_j_p, count_j_n);
         if (total_jump == 4) {
@@ -262,9 +272,9 @@ int scoreDirects(int posx, int posy, int dx, int dy, int player) {
         }
     }
 
-    // 处理普通连子（无跳跃）
+    // 处理普通连子（非跳连）
     if (count >= 5) {
-        return SCORE_FIVE; // 五子连珠
+        return SCORE_FIVE; // 五连子
     }
     else if (count == 4) {
         if (empty_pos == 3) {
@@ -279,7 +289,7 @@ int scoreDirects(int posx, int posy, int dx, int dy, int player) {
             return SCORE_LIVE_THREE; // 活三（两端空）
         }
         else if (empty_pos > 0) {
-            return SCORE_SLEEP_THREE; // 睡三（一端空）
+            return SCORE_SLEEP_THREE; // 眠三（一端空）
         }
     }
     else if (count == 2) {
@@ -287,40 +297,41 @@ int scoreDirects(int posx, int posy, int dx, int dy, int player) {
             return SCORE_LIVE_TWO; // 活二（两端空）
         }
         else if (empty_pos > 0) {
-            return SCORE_SLEEP_TWO; // 睡二（一端空）
+            return SCORE_SLEEP_TWO; // 眠二（一端空）
         }
     }
 
-    return 0; // 无有效棋型
+    return 0; // 无有效连子
 }
 
-// 计算指定位置落子后的综合评分（区分敌我）
+// 计算指定位置的落子评分（临时落子后计算）
 LLS scorePosition(int x, int y, int player) {
     if (!is_valid_pos(x, y)) return 0;
 
-    // 临时落子，用于评分计算
+    // 临时落子，计算评分
     update_board(x, y, player);
 
     int opponent = (player == BLACK) ? WHITE : BLACK;
     LLS total = 0;
-    // 4个方向：横(0,1)、竖(1,0)、斜下(1,1)、斜上(1,-1)
+    // 4个方向：水平(0,1)、垂直(1,0)、正斜(1,1)、反斜(1,-1)
     int dirs[4][2] = { {0, 1}, {1, 0}, {1, 1}, {1, -1} };
 
-    // 计算己方棋型得分
+    // 计算我方连子的分数
     for (auto& dir : dirs) {
         total += scoreDirects(x, y, dir[0], dir[1], player);
     }
 
-    // 计算敌方棋型得分（权重可调整，通常需要优先防守）
+    // 计算对方连子的分数（权重调整）
     for (auto& dir : dirs) {
-        total -= scoreDirects(x, y, dir[0], dir[1], opponent) * 0.9; // 防守权重略低
+        total -= scoreDirects(x, y, dir[0], dir[1], opponent) * 0.9; // 防守权重
     }
 
     // 撤销临时落子
     update_board(x, y, EMPTY);
     return total;
 }
-// 检查是否获胜
+
+// 检查是否胜利
 bool check_win(int x, int y, int color) {
     int dirs[4][2] = { {0, 1}, {1, 0}, {1, 1}, {1, -1} };
 
@@ -328,7 +339,7 @@ bool check_win(int x, int y, int color) {
         int dx = dir[0], dy = dir[1];
         int count = 1;
 
-        // 正向检查
+        // 正向计数
         for (int i = 1; i < 5; i++) {
             int nx = x + dx * i;
             int ny = y + dy * i;
@@ -340,7 +351,7 @@ bool check_win(int x, int y, int color) {
             }
         }
 
-        // 反向检查
+        // 反向计数
         for (int i = 1; i < 5; i++) {
             int nx = x - dx * i;
             int ny = y - dy * i;
@@ -359,19 +370,18 @@ bool check_win(int x, int y, int color) {
     return false;
 }
 
-// 评估函数（示例）
-// 新的评估函数：基于棋型评分
+// 评估当前棋盘得分
 LLS evaluate() {
     LLS totalScore = 0;
-    // 对棋盘所有非空位置进行评分
+    // 遍历所有落子位置计算分数
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
             if (board[i][j] == my_color) {
-                // 累加己方已有棋子的棋型分
+                // 累加我方棋子的得分
                 totalScore += scorePosition(i, j, my_color);
             }
             else if (board[i][j] != EMPTY) {
-                // 减去敌方已有棋子的棋型分（防守）
+                // 减去对方棋子的得分（防守权重）
                 totalScore -= scorePosition(i, j, board[i][j]) * 0.9;
             }
         }
@@ -379,22 +389,22 @@ LLS evaluate() {
     return totalScore;
 }
 
-// 带哈希缓存的搜索（简化版Alpha-Beta）
+// 带哈希优化的Alpha-Beta搜索
 LLS alphaBeta(int depth, LLS alpha, LLS beta) {
-    // 先检查哈希缓存
+    // 先检查哈希表
     LLS hashScore = lookupHash(currentHash, depth, alpha, beta);
     if (hashScore != -2000000000000000001LL) {
         return hashScore;
     }
 
-    // 到达最大深度，返回评估值
+    // 搜索到最大深度，返回评估值
     if (depth == 0) {
         LLS score = evaluate();
         storeHash(currentHash, depth, score, HASH_EXACT);
         return score;
     }
 
-    // 生成所有可能的落子
+    // 生成所有可能的走法
     vector<pair<int, int>> moves;
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
@@ -421,7 +431,7 @@ LLS alphaBeta(int depth, LLS alpha, LLS beta) {
 
         LLS score;
         if (isWin) {
-            // 获胜得高分
+            // 胜利得高分
             score = (currentColor == my_color) ? 1e18 : -1e18;
         }
         else {
@@ -429,7 +439,7 @@ LLS alphaBeta(int depth, LLS alpha, LLS beta) {
             score = -alphaBeta(depth - 1, -beta, -alpha);
         }
 
-        // 撤销落子并恢复哈希
+        // 撤销落子和哈希
         update_board(x, y, EMPTY);
 
         if (score > bestScore) {
@@ -443,7 +453,7 @@ LLS alphaBeta(int depth, LLS alpha, LLS beta) {
         }
     }
 
-    // 存储哈希结果
+    // 存储哈希表
     HashType type;
     if (bestScore <= alpha) {
         type = HASH_ALPHA;
@@ -459,17 +469,15 @@ LLS alphaBeta(int depth, LLS alpha, LLS beta) {
     return bestScore;
 }
 
-// 获取最佳落子（使用哈希缓存优化）
 pair<int, int> get_best_move() {
-    // 检查是否有必防位置（优先逻辑）
+    // 优先防御对方即时胜利威胁
     int enemy_color = (my_color == BLACK) ? WHITE : BLACK;
     for (int x = 0; x < BOARD_SIZE; x++) {
         for (int y = 0; y < BOARD_SIZE; y++) {
             if (is_valid_pos(x, y)) {
                 update_board(x, y, enemy_color);
                 bool enemy_win = check_win(x, y, enemy_color);
-                update_board(x, y, EMPTY); // 恢复
-
+                update_board(x, y, EMPTY);
                 if (enemy_win) {
                     debug(("Defend at (" + to_string(x) + "," + to_string(y) + ")").c_str());
                     return { x, y };
@@ -478,56 +486,103 @@ pair<int, int> get_best_move() {
         }
     }
 
-    // 使用带哈希缓存的搜索算法
-    int bestX = -1, bestY = -1;
-    LLS bestScore = -1e18;
-    int searchDepth = 3; // 搜索深度
-
+    // 防御对方冲四等高危棋型
     for (int x = 0; x < BOARD_SIZE; x++) {
         for (int y = 0; y < BOARD_SIZE; y++) {
             if (is_valid_pos(x, y)) {
-                // 尝试落子
-                update_board(x, y, my_color);
-                bool isWin = check_win(x, y, my_color);
-                LLS score;
-
-                if (isWin) {
-                    score = 1e18; // 获胜走法
+                update_board(x, y, enemy_color);
+                LLS enemy_score = 0;
+                int dirs[4][2] = { {0,1},{1,0},{1,1},{1,-1} };
+                for (auto& dir : dirs) {
+                    enemy_score += scoreDirects(x, y, dir[0], dir[1], enemy_color);
                 }
-                else {
-                    // 搜索对手的最佳应对
-                    score = -alphaBeta(searchDepth - 1, -1e18, 1e18);
-                }
-
-                // 恢复棋盘
                 update_board(x, y, EMPTY);
-
-                if (score > bestScore) {
-                    bestScore = score;
-                    bestX = x;
-                    bestY = y;
+                if (enemy_score >= SCORE_RUSH_FOUR) {
+                    debug(("Block enemy rush four at (" + to_string(x) + "," + to_string(y) + ")").c_str());
+                    return { x, y };
                 }
             }
         }
     }
 
-    // 如果搜索到有效位置
+    // 生成候选落子并计算评分
+    vector<pair<LLS, pair<int, int>>> candidateMoves;
+    for (int x = 0; x < BOARD_SIZE; x++) {
+        for (int y = 0; y < BOARD_SIZE; y++) {
+            if (is_valid_pos(x, y)) {
+                // 计算当前位置的评分（我方方得分减去对方得分）
+                LLS score = scorePosition(x, y, my_color);
+                candidateMoves.emplace_back(score, make_pair(x, y));
+            }
+        }
+    }
+
+    // 按评分降序排序（优先高价值位置）
+    // 将原来的排序代码修改为：
+    sort(candidateMoves.begin(), candidateMoves.end(),
+        [](const pair<LLS, pair<int, int>>& a, const pair<LLS, pair<int, int>>& b) {
+            return a.first > b.first;
+        });
+
+    // 限制候选数量（最多6个，减少探索量）
+    int maxCandidates = 6;
+    if (candidateMoves.size() > maxCandidates) {
+        candidateMoves.resize(maxCandidates);
+    }
+
+    // 使用Alpha-Beta搜索从候选中选出最优解
+    int bestX = -1, bestY = -1;
+    LLS bestScore = -1e18;
+    int searchDepth = 4;
+
+    for (const auto& candidate : candidateMoves) {
+        int x = candidate.second.first;
+        int y = candidate.second.second;
+
+        update_board(x, y, my_color);
+        bool isWin = check_win(x, y, my_color);
+        LLS score;
+
+        if (isWin) {
+            score = 1e18; // 直接获胜的走法
+        }
+        else {
+            score = -alphaBeta(searchDepth - 1, -1e18, 1e18);
+        }
+
+        update_board(x, y, EMPTY);
+
+        if (score > bestScore) {
+            bestScore = score;
+            bestX = x;
+            bestY = y;
+        }
+    }
+
+    // 候选搜索找到有效位置
     if (bestX != -1) {
-        debug(("Hash-optimized move at (" + to_string(bestX) + "," + to_string(bestY) + ")").c_str());
+        debug(("Optimal move at (" + to_string(bestX) + "," + to_string(bestY) + ")").c_str());
         return { bestX, bestY };
     }
 
-    //  fallback逻辑：中心位置
-    for (int x = 5; x <= 7; x++) {
-        for (int y = 5; y <= 7; y++) {
-            if (is_valid_pos(x, y)) {
-                debug(("Occupy center at (" + to_string(x) + "," + to_string(y) + ")").c_str());
+    //  fallback策略
+    for (int x = 0; x < BOARD_SIZE; x++) {
+        for (int y = 0; y < BOARD_SIZE; y++) {
+            if (is_valid_pos(x, y) && hasNeighbor(x, y, 1)) {
+                debug(("Near enemy move at (" + to_string(x) + "," + to_string(y) + ")").c_str());
                 return { x, y };
             }
         }
     }
 
-    // 最后的默认走法
+    for (int x = 5; x <= 7; x++) {
+        for (int y = 5; y <= 7; y++) {
+            if (is_valid_pos(x, y)) {
+                return { x, y };
+            }
+        }
+    }
+
     for (int x = 0; x < BOARD_SIZE; x++) {
         for (int y = 0; y < BOARD_SIZE; y++) {
             if (is_valid_pos(x, y)) {
@@ -554,7 +609,7 @@ void handle_start(int color) {
 void handle_place(int x, int y) {
     int enemy_color = (my_color == BLACK) ? WHITE : BLACK;
     if (is_valid_pos(x, y)) {
-        update_board(x, y, enemy_color); // 使用带哈希更新的函数
+        update_board(x, y, enemy_color); // 更新棋盘和哈希
         debug(("Enemy placed at (" + to_string(x) + "," + to_string(y) + ")").c_str());
     }
     else {
@@ -562,18 +617,15 @@ void handle_place(int x, int y) {
     }
 }
 
-// 检查指定位置周围1-2格内是否有棋子
-bool hasNeighbor(int x, int y, int distance = 2) {
-    // 检查周围distance范围内的所有位置
+// 检查指定位置周围distance范围内是否有棋子
+bool hasNeighbor(int x, int y, int distance ) {
     for (int dx = -distance; dx <= distance; dx++) {
         for (int dy = -distance; dy <= distance; dy++) {
-            // 跳过当前位置自身
-            if (dx == 0 && dy == 0) continue;
+            if (dx == 0 && dy == 0) continue; // 跳过自身
 
             int nx = x + dx;
             int ny = y + dy;
 
-            // 检查是否在棋盘范围内且有棋子
             if (nx >= 0 && nx < BOARD_SIZE && ny >= 0 && ny < BOARD_SIZE) {
                 if (board[nx][ny] != EMPTY) {
                     return true;
@@ -584,10 +636,10 @@ bool hasNeighbor(int x, int y, int distance = 2) {
     return false;
 }
 
-// 获取所有有效的候选落子位置
+// 获取有效候选走法
 vector<pair<int, int>> getMoves() {
     vector<pair<int, int>> validMoves;
-    // 只考虑已有棋子周围2格内的位置（减少无效计算）
+    // 只考虑已有棋子周围2格内的位置（减少计算量）
     for (int x = 0; x < BOARD_SIZE; x++) {
         for (int y = 0; y < BOARD_SIZE; y++) {
             if (is_valid_pos(x, y) && hasNeighbor(x, y)) {
@@ -596,7 +648,7 @@ vector<pair<int, int>> getMoves() {
         }
     }
 
-    // 若没有有效走法，默认走中心
+    // 若无有效走法，默认中心区域
     if (validMoves.empty()) {
         for (int x = 5; x <= 7; x++) {
             for (int y = 5; y <= 7; y++) {
@@ -607,7 +659,7 @@ vector<pair<int, int>> getMoves() {
         }
     }
 
-    // 按评分排序走法（Alpha-Beta剪枝效率更高）
+    // 按评分排序（提升Alpha-Beta剪枝效率）
     sort(validMoves.begin(), validMoves.end(), [&](const pair<int, int>& a, const pair<int, int>& b) {
         return scorePosition(a.first, a.second, my_color) > scorePosition(b.first, b.second, my_color);
         });
@@ -615,8 +667,9 @@ vector<pair<int, int>> getMoves() {
     return validMoves;
 }
 
-// 打印所有有效候选落子位置，用于验证筛选逻辑
+// 打印有效候选走法（调试用）
 void printValidMoves() {
+#if DEBUG_MODE == 1  // 仅调试模式下打印
     vector<pair<int, int>> moves = getMoves();
     printf("Valid moves count: %d\n", moves.size());
     for (auto& move : moves) {
@@ -624,18 +677,13 @@ void printValidMoves() {
     }
     printf("\n");
     fflush(stdout);
+#endif
 }
+
 // 处理TURN命令
 void handle_turn() {
     clock_t start_single_time = clock();
-    printValidMoves();
-    // 检查总时间
-    clock_t current_time = clock();
-    int used = (current_time - start_total_time) / CLOCKS_PER_SEC;
-    if (used > MAX_TOTAL_TIME) {
-        debug(("Total time exceeded: " + to_string(used) + "s").c_str());
-        return;
-    }
+    printValidMoves(); // 仅调试模式下打印
 
     // 获取最佳走法
     pair<int, int> move = get_best_move();
@@ -650,7 +698,7 @@ void handle_turn() {
 
     // 执行走法
     if (is_valid_pos(x, y)) {
-        update_board(x, y, my_color); // 使用带哈希更新的函数
+        update_board(x, y, my_color); // 更新棋盘和哈希
         printf("%d %d\n", x, y);
         fflush(stdout);
         debug(("My move at (" + to_string(x) + "," + to_string(y) + ")").c_str());
