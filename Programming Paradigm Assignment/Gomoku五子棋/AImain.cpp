@@ -25,13 +25,14 @@ using ULL = unsigned long long;
 using LLS = long long;
 
 // 评分配置（根据连子情况定义分数）
-const int SCORE_FIVE = 1000000;    // 五连子(胜利)
-const int SCORE_LIVE_FOUR = 100000; // 活四(两端空)
-const int SCORE_JUMP_LIVE_FOUR = 90000; // 跳活四
-const int SCORE_RUSH_FOUR = 10000;  // 冲四(一端空)
-const int SCORE_JUMP_RUSH_FOUR = 9000;  // 跳冲四
-const int SCORE_LIVE_THREE = 10000;   // 活三(两端空)
-const int SCORE_JUMP_LIVE_THREE = 5000;  // 跳活三
+const int SCORE_FIVE = 1000000000;    // 五连子(胜利)
+const int SCORE_LIVE_FOUR = 1100000; // 活四(两端空)
+const int SCORE_SLEEP_FOUR = 700; // 活四(两端空)
+const int SCORE_JUMP_LIVE_FOUR = 1000; // 跳活四
+const int SCORE_RUSH_FOUR = 1000;  // 冲四(一端空)
+const int SCORE_JUMP_RUSH_FOUR = 900;  // 跳冲四
+const int SCORE_LIVE_THREE = 1050;   // 活三(两端空)
+const int SCORE_JUMP_LIVE_THREE = 900;  // 跳活三
 const int SCORE_SLEEP_THREE = 100;   // 眠三(一端空)
 const int SCORE_LIVE_TWO = 10;      // 活二
 const int SCORE_SLEEP_TWO = 5;      // 眠二
@@ -255,120 +256,107 @@ int scoreDirects(int posx, int posy, int dx, int dy, int player) {
         y -= dy;
     }
 
-    // -------------------------- 结果判断逻辑 --------------------------
-    // 处理跳连情况
-    if (jump_p || jump_n) {
-        int total_jump = count + max(count_j_p, count_j_n);
-        if (total_jump == 4) {
-            if ((jump_p && empty_j_p && empty_pos == 3) || (jump_n && empty_j_n && empty_pos == 3)) {
-                return SCORE_JUMP_LIVE_FOUR; // 跳活四
-            }
-            else if ((jump_p && (block_j_p || empty_j_p)) || (jump_n && (block_j_n || empty_j_n))) {
-                return SCORE_JUMP_RUSH_FOUR; // 跳冲四
-            }
-        }
-        else if (total_jump == 3 && empty_pos == 3) {
+    // // -------------------------- 棋型判断与评分 --------------------------
+    // 处理跳跃连子（如跳活三、跳活四）
+    if (jump_p) {
+        // 正方向跳跃
+        if (count + count_j_p == 3 && empty_pos == 3 && empty_j_p) {
             return SCORE_JUMP_LIVE_THREE; // 跳活三
+        }
+        else if (count + count_j_p == 4 && empty_pos == 3 && block_j_p) {
+            return SCORE_JUMP_RUSH_FOUR; // 跳睡四
+        }
+        else if (count + count_j_p == 4 && empty_pos == 1 && empty_j_p) {
+            return SCORE_JUMP_RUSH_FOUR; // 跳睡四
+        }
+        else if (count + count_j_p == 4 && empty_pos == 3 && empty_j_p) {
+            return SCORE_JUMP_LIVE_FOUR; // 跳活四
+        }
+    }
+    else if (jump_n) {
+        // 反方向跳跃
+        if (count + count_j_n == 3 && empty_pos == 3 && empty_j_n) {
+            return SCORE_JUMP_LIVE_THREE; // 跳活三
+        }
+        else if (count + count_j_n == 4 && empty_pos == 3 && block_j_n) {
+            return SCORE_RUSH_FOUR; // 跳睡四
+        }
+        else if (count + count_j_n == 4 && empty_pos == 2 && empty_j_n) {
+            return SCORE_RUSH_FOUR; // 跳睡四
+        }
+        else if (count + count_j_n == 4 && empty_pos == 3 && empty_j_n) {
+            return SCORE_JUMP_LIVE_FOUR; // 跳活四
         }
     }
 
-    // 处理普通连子（非跳连）
+    // 处理普通连子（无跳跃）
     if (count >= 5) {
-        return SCORE_FIVE; // 五连子
+        return SCORE_FIVE;  // 五子连珠（获胜）
     }
     else if (count == 4) {
         if (empty_pos == 3) {
-            return SCORE_LIVE_FOUR; // 活四（两端空）
+            return SCORE_LIVE_FOUR; // 活四（两端空白，必赢）
         }
         else if (empty_pos > 0) {
-            return SCORE_RUSH_FOUR; // 冲四（一端空）
+            return SCORE_RUSH_FOUR; // 冲四（一端空白，需补位）
         }
     }
     else if (count == 3) {
         if (empty_pos == 3) {
-            return SCORE_LIVE_THREE; // 活三（两端空）
+            return SCORE_LIVE_THREE; // 活三（两端空白，可发展为活四）
         }
         else if (empty_pos > 0) {
-            return SCORE_SLEEP_THREE; // 眠三（一端空）
+            return SCORE_SLEEP_THREE; // 睡三（一端空白，需补位才能冲四）
         }
     }
     else if (count == 2) {
         if (empty_pos == 3) {
-            return SCORE_LIVE_TWO; // 活二（两端空）
+            return SCORE_LIVE_TWO; // 活二（两端空白，可发展为活三）
         }
         else if (empty_pos > 0) {
-            return SCORE_SLEEP_TWO; // 眠二（一端空）
+            return SCORE_SLEEP_TWO; // 睡二（一端空白，需补位才能发展）
         }
     }
 
-    return 0; // 无有效连子
+    return 0; // 无有效棋型，评分0 结果判断逻辑 -------------------------
 }
 
 // 计算指定位置的落子评分（临时落子后计算）
 LLS scorePosition(int x, int y, int player) {
     if (!is_valid_pos(x, y)) return 0;
 
-    // 临时落子，计算评分
+    //// 临时落子，计算评分
     update_board(x, y, player);
 
     int opponent = (player == BLACK) ? WHITE : BLACK;
     LLS total = 0;
+    LLS myScore = 0;       // AI在该位置的评分
+    LLS rivalScore = 0;    // 对手在该位置的评分
     // 4个方向：水平(0,1)、垂直(1,0)、正斜(1,1)、反斜(1,-1)
     int dirs[4][2] = { {0, 1}, {1, 0}, {1, 1}, {1, -1} };
 
     // 计算我方连子的分数
     for (auto& dir : dirs) {
-        total += scoreDirects(x, y, dir[0], dir[1], player);
+        myScore += scoreDirects(x, y, dir[0], dir[1], player);
     }
 
     // 计算对方连子的分数（权重调整）
     for (auto& dir : dirs) {
-        total -= scoreDirects(x, y, dir[0], dir[1], opponent) * 0.9; // 防守权重
+        rivalScore += scoreDirects(x, y, dir[0], dir[1], opponent); // 防守权重
     }
-
-    // 撤销临时落子
+    // 评分修正（同scorePlayer函数，提升中高威胁优先级）
+    if (rivalScore >= 1400 && rivalScore < 1000000) {
+        rivalScore = 1000000;
+    }
+    if (myScore >= 1400 && myScore < 1000000) {
+        myScore = 1000000;
+    }
+    total += myScore + rivalScore;
+    //// 撤销临时落子
     update_board(x, y, EMPTY);
     return total;
 }
 
-// 检查是否胜利
-bool check_win(int x, int y, int color) {
-    int dirs[4][2] = { {0, 1}, {1, 0}, {1, 1}, {1, -1} };
-
-    for (auto& dir : dirs) {
-        int dx = dir[0], dy = dir[1];
-        int count = 1;
-
-        // 正向计数
-        for (int i = 1; i < 5; i++) {
-            int nx = x + dx * i;
-            int ny = y + dy * i;
-            if (nx >= 0 && nx < BOARD_SIZE && ny >= 0 && ny < BOARD_SIZE && board[nx][ny] == color) {
-                count++;
-            }
-            else {
-                break;
-            }
-        }
-
-        // 反向计数
-        for (int i = 1; i < 5; i++) {
-            int nx = x - dx * i;
-            int ny = y - dy * i;
-            if (nx >= 0 && nx < BOARD_SIZE && ny >= 0 && ny < BOARD_SIZE && board[nx][ny] == color) {
-                count++;
-            }
-            else {
-                break;
-            }
-        }
-
-        if (count >= 5) {
-            return true;
-        }
-    }
-    return false;
-}
 
 // 评估当前棋盘得分
 LLS evaluate() {
@@ -382,7 +370,7 @@ LLS evaluate() {
             }
             else if (board[i][j] != EMPTY) {
                 // 减去对方棋子的得分（防守权重）
-                totalScore -= scorePosition(i, j, board[i][j]) * 0.9;
+                totalScore -= scorePosition(i, j, board[i][j]) ;
             }
         }
     }
@@ -404,11 +392,11 @@ LLS alphaBeta(int depth, LLS alpha, LLS beta) {
         return score;
     }
 
-    // 生成所有可能的走法
+    // 生成所有可能的走法,这个方法是有问题的,需要排序并挑选6个
     vector<pair<int, int>> moves;
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
-            if (is_valid_pos(i, j)) {
+            if (is_valid_pos(i, j) && hasNeighbor(i, j, 2)) {
                 moves.emplace_back(i, j);
             }
         }
@@ -427,7 +415,7 @@ LLS alphaBeta(int depth, LLS alpha, LLS beta) {
         int x = move.first, y = move.second;
         // 落子并更新哈希
         update_board(x, y, currentColor);
-        bool isWin = check_win(x, y, currentColor);
+        bool isWin = scorePosition(x,y, currentColor);
 
         LLS score;
         if (isWin) {
@@ -471,7 +459,7 @@ LLS alphaBeta(int depth, LLS alpha, LLS beta) {
 
 pair<int, int> get_best_move() {
     // 优先防御对方即时胜利威胁
-    int enemy_color = (my_color == BLACK) ? WHITE : BLACK;
+    /*int enemy_color = (my_color == BLACK) ? WHITE : BLACK;
     for (int x = 0; x < BOARD_SIZE; x++) {
         for (int y = 0; y < BOARD_SIZE; y++) {
             if (is_valid_pos(x, y)) {
@@ -484,7 +472,7 @@ pair<int, int> get_best_move() {
                 }
             }
         }
-    }
+    }*/
 
     // 生成候选落子并计算评分
     vector<pair<LLS, pair<int, int>>> candidateMoves;
@@ -513,7 +501,7 @@ pair<int, int> get_best_move() {
 
     // 使用Alpha-Beta搜索从候选中选出最优解
     int bestX = -1, bestY = -1;
-    LLS bestScore = -1e18;
+    LLS bestScore = -20000000000;
     int searchDepth = 4;
 
     for (const auto& candidate : candidateMoves) {
@@ -521,15 +509,9 @@ pair<int, int> get_best_move() {
         int y = candidate.second.second;
 
         update_board(x, y, my_color);
-        bool isWin = check_win(x, y, my_color);
+        bool isWin = scorePosition(x, y, my_color);
         LLS score;
-
-        if (isWin) {
-            score = 1e18; // 直接获胜的走法
-        }
-        else {
-            score = -alphaBeta(searchDepth - 1, -1e18, 1e18);
-        }
+        score = -alphaBeta(searchDepth - 1, -1e18, 1e18);        
 
         update_board(x, y, EMPTY);
 
@@ -557,7 +539,7 @@ pair<int, int> get_best_move() {
     }
 
     for (int x = 4; x <= 8; x++) {
-        for (int y = 5; y <= 7; y++) {
+        for (int y = 4; y <= 8; y++) {
             if (is_valid_pos(x, y)) {
                 return { x, y };
             }
@@ -615,37 +597,6 @@ bool hasNeighbor(int x, int y, int distance ) {
         }
     }
     return false;
-}
-
-// 获取有效候选走法
-vector<pair<int, int>> getMoves() {
-    vector<pair<int, int>> validMoves;
-    // 只考虑已有棋子周围2格内的位置（减少计算量）
-    for (int x = 0; x < BOARD_SIZE; x++) {
-        for (int y = 0; y < BOARD_SIZE; y++) {
-            if (is_valid_pos(x, y) && hasNeighbor(x, y)) {
-                validMoves.emplace_back(x, y);
-            }
-        }
-    }
-
-    // 若无有效走法，默认中心区域
-    if (validMoves.empty()) {
-        for (int x = 4; x <= 7; x++) {
-            for (int y = 4; y <= 7; y++) {
-                if (is_valid_pos(x, y)) {
-                    validMoves.emplace_back(x, y);
-                }
-            }
-        }
-    }
-
-    // 按评分排序（提升Alpha-Beta剪枝效率）
-    sort(validMoves.begin(), validMoves.end(), [&](const pair<int, int>& a, const pair<int, int>& b) {
-        return scorePosition(a.first, a.second, my_color) > scorePosition(b.first, b.second, my_color);
-        });
-
-    return validMoves;
 }
 
 // 打印有效候选走法（调试用）
