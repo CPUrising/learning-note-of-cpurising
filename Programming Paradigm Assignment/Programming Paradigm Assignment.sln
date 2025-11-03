@@ -41,6 +41,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Ass3_p4", "Ass3_p4\Ass3_p4.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Gomoku五子棋3", "Gomoku五子棋3\Gomoku五子棋3.vcxproj", "{C9FBECA4-4DC0-4798-94A6-9E2A1EA7C255}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Gomoku五子棋4", "Gomoku五子棋4\Gomoku五子棋4.vcxproj", "{C9354CEB-32CB-4930-8741-898F04376DBA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -201,6 +203,14 @@ Global
 		{C9FBECA4-4DC0-4798-94A6-9E2A1EA7C255}.Release|x64.Build.0 = Release|x64
 		{C9FBECA4-4DC0-4798-94A6-9E2A1EA7C255}.Release|x86.ActiveCfg = Release|Win32
 		{C9FBECA4-4DC0-4798-94A6-9E2A1EA7C255}.Release|x86.Build.0 = Release|Win32
+		{C9354CEB-32CB-4930-8741-898F04376DBA}.Debug|x64.ActiveCfg = Debug|x64
+		{C9354CEB-32CB-4930-8741-898F04376DBA}.Debug|x64.Build.0 = Debug|x64
+		{C9354CEB-32CB-4930-8741-898F04376DBA}.Debug|x86.ActiveCfg = Debug|Win32
+		{C9354CEB-32CB-4930-8741-898F04376DBA}.Debug|x86.Build.0 = Debug|Win32
+		{C9354CEB-32CB-4930-8741-898F04376DBA}.Release|x64.ActiveCfg = Release|x64
+		{C9354CEB-32CB-4930-8741-898F04376DBA}.Release|x64.Build.0 = Release|x64
+		{C9354CEB-32CB-4930-8741-898F04376DBA}.Release|x86.ActiveCfg = Release|Win32
+		{C9354CEB-32CB-4930-8741-898F04376DBA}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

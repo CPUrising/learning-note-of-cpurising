@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{c9fbeca4-4dc0-4798-94a6-9e2a1ea7c255}</ProjectGuid>
-    <RootNamespace>Gomoku五子棋3</RootNamespace>
+    <ProjectGuid>{36132b29-b8b0-4ace-ae98-713748c776e1}</ProjectGuid>
+    <RootNamespace>Warshall求关系的自反对称和传递闭包</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -123,7 +123,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AImain_m1.cpp" />
+    <ClCompile Include="FileName.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

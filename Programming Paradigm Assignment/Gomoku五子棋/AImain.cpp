@@ -27,7 +27,6 @@ using LLS = long long;
 // 评分配置（根据连子情况定义分数）
 const int SCORE_FIVE = 1000000000;    // 五连子(胜利)
 const int SCORE_LIVE_FOUR = 1100000; // 活四(两端空)
-const int SCORE_SLEEP_FOUR = 700; // 活四(两端空)
 const int SCORE_JUMP_LIVE_FOUR = 1000; // 跳活四
 const int SCORE_RUSH_FOUR = 1000;  // 冲四(一端空)
 const int SCORE_JUMP_RUSH_FOUR = 900;  // 跳冲四
@@ -120,8 +119,8 @@ void init_board() {
     }
     board[5][5] = 2;
     board[6][6] = 2;
-    board[6][5] = 2;
-    board[5][6] = 2;
+    board[6][5] = 1;
+    board[5][6] = 1;
     // 初始化当前哈希值（所有位置为空）
     currentHash = 0;
     for (int i = 0; i < BOARD_SIZE; i++) {
@@ -344,14 +343,15 @@ LLS scorePosition(int x, int y, int player) {
     for (auto& dir : dirs) {
         rivalScore += scoreDirects(x, y, dir[0], dir[1], opponent); // 防守权重
     }
-    // 评分修正（同scorePlayer函数，提升中高威胁优先级）
+    
     if (rivalScore >= 1400 && rivalScore < 1000000) {
-        rivalScore = 1000000;
+        rivalScore = 1000000; // 强化防守优先
     }
     if (myScore >= 1400 && myScore < 1000000) {
-        myScore = 1000000;
+        myScore = 1000000; // 强化我方进攻优先
     }
-    total += myScore + rivalScore;
+
+    total = myScore + rivalScore; // 攻守并行
     //// 撤销临时落子
     update_board(x, y, EMPTY);
     return total;
@@ -377,7 +377,6 @@ LLS evaluate() {
     return totalScore;
 }
 
-// 带哈希优化的Alpha-Beta搜索
 LLS alphaBeta(int depth, LLS alpha, LLS beta) {
     // 先检查哈希表
     LLS hashScore = lookupHash(currentHash, depth, alpha, beta);
@@ -385,21 +384,40 @@ LLS alphaBeta(int depth, LLS alpha, LLS beta) {
         return hashScore;
     }
 
-    // 搜索到最大深度，返回评估值
+    // 到达搜索深度，返回评估值
     if (depth == 0) {
         LLS score = evaluate();
         storeHash(currentHash, depth, score, HASH_EXACT);
         return score;
     }
 
-    // 生成所有可能的走法,这个方法是有问题的,需要排序并挑选6个
-    vector<pair<int, int>> moves;
+    // 生成所有可能的走法，并计算分数
+    vector<pair<LLS, pair<int, int>>> candidateMoves;
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
-            if (is_valid_pos(i, j) && hasNeighbor(i, j, 2)) {
-                moves.emplace_back(i, j);
+            if (is_valid_pos(i, j) && hasNeighbor(i, j, 1)) {
+                // 计算当前位置对当前玩家的分数
+                int currentPlayer = (depth % 2 == 0) ? my_color : (my_color == BLACK ? WHITE : BLACK);
+                LLS score = scorePosition(i, j, currentPlayer);
+                candidateMoves.emplace_back(score, make_pair(i, j));
             }
         }
+    }
+
+    // 按分数降序排序，挑选分数最高的6个走法
+    sort(candidateMoves.begin(), candidateMoves.end(),
+        [](const pair<LLS, pair<int, int>>& a, const pair<LLS, pair<int, int>>& b) {
+            return a.first > b.first;
+        });
+    int maxMoves = 6;
+    if (candidateMoves.size() > maxMoves) {
+        candidateMoves.resize(maxMoves);
+    }
+
+    // 提取排序后的走法
+    vector<pair<int, int>> moves;
+    for (const auto& cm : candidateMoves) {
+        moves.push_back(cm.second);
     }
 
     if (moves.empty()) {
@@ -413,13 +431,13 @@ LLS alphaBeta(int depth, LLS alpha, LLS beta) {
 
     for (auto& move : moves) {
         int x = move.first, y = move.second;
-        // 落子并更新哈希
+        // 执行走法并更新哈希
         update_board(x, y, currentColor);
-        bool isWin = scorePosition(x,y, currentColor);
+        bool isWin = scorePosition(x, y, currentColor) >= SCORE_FIVE;
 
         LLS score;
         if (isWin) {
-            // 胜利得高分
+            // 获胜走法
             score = (currentColor == my_color) ? 1e18 : -1e18;
         }
         else {
@@ -427,7 +445,7 @@ LLS alphaBeta(int depth, LLS alpha, LLS beta) {
             score = -alphaBeta(depth - 1, -beta, -alpha);
         }
 
-        // 撤销落子和哈希
+        // 撤销走法和哈希
         update_board(x, y, EMPTY);
 
         if (score > bestScore) {
@@ -458,28 +476,12 @@ LLS alphaBeta(int depth, LLS alpha, LLS beta) {
 }
 
 pair<int, int> get_best_move() {
-    // 优先防御对方即时胜利威胁
-    /*int enemy_color = (my_color == BLACK) ? WHITE : BLACK;
-    for (int x = 0; x < BOARD_SIZE; x++) {
-        for (int y = 0; y < BOARD_SIZE; y++) {
-            if (is_valid_pos(x, y)) {
-                update_board(x, y, enemy_color);
-                bool enemy_win = check_win(x, y, enemy_color);
-                update_board(x, y, EMPTY);
-                if (enemy_win) {
-                    debug(("Defend at (" + to_string(x) + "," + to_string(y) + ")").c_str());
-                    return { x, y };
-                }
-            }
-        }
-    }*/
-
     // 生成候选落子并计算评分
     vector<pair<LLS, pair<int, int>>> candidateMoves;
     for (int x = 0; x < BOARD_SIZE; x++) {
         for (int y = 0; y < BOARD_SIZE; y++) {
             // 新增条件：位置有效 且 1-2格子内有相邻棋子
-            if (is_valid_pos(x, y) && hasNeighbor(x, y, 2)) {
+            if (is_valid_pos(x, y) && hasNeighbor(x, y, 1)) {
                 LLS score = scorePosition(x, y, my_color);
                 candidateMoves.emplace_back(score, make_pair(x, y));
             }

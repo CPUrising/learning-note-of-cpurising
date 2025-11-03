@@ -5,6 +5,23 @@
 #include <algorithm>
 
 class CMatrix {
+private:
+    int m_iRow, m_iCol;  // 行数、列数
+    double* m_pdMat;     // 矩阵数据（行优先存储）
+
+    // 检查索引合法性
+    void checkIndex(int row, int col) const {
+        if (row < 0 || row >= m_iRow || col < 0 || col >= m_iCol) {
+            throw std::out_of_range("矩阵索引越界");
+        }
+    }
+
+    // 检查矩阵尺寸是否相同（用于加减运算）
+    void checkSize(const CMatrix& other) const {
+        if (m_iRow != other.m_iRow || m_iCol != other.m_iCol) {
+            throw std::invalid_argument("矩阵尺寸不匹配");
+        }
+    }
 public:
     // 构造函数（默认、指定行列、从二维数组初始化）
     CMatrix() : m_iRow(0), m_iCol(0), m_pdMat(nullptr) {}
@@ -284,23 +301,7 @@ public:
     int rows() const { return m_iRow; }
     int cols() const { return m_iCol; }
 
-private:
-    int m_iRow, m_iCol;  // 行数、列数
-    double* m_pdMat;     // 矩阵数据（行优先存储）
 
-    // 检查索引合法性
-    void checkIndex(int row, int col) const {
-        if (row < 0 || row >= m_iRow || col < 0 || col >= m_iCol) {
-            throw std::out_of_range("矩阵索引越界");
-        }
-    }
-
-    // 检查矩阵尺寸是否相同（用于加减运算）
-    void checkSize(const CMatrix& other) const {
-        if (m_iRow != other.m_iRow || m_iCol != other.m_iCol) {
-            throw std::invalid_argument("矩阵尺寸不匹配");
-        }
-    }
 };
 
 int main() {
