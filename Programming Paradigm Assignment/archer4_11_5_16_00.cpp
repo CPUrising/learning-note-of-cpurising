@@ -8,9 +8,6 @@
 #include <string.h>                              // C 语言字符串处理库
 #include <time.h>        
 #include <string>
-#include <sstream>
-#include <vector>
-
 /* 定义常量变量 */
 const int OFFSET_X[] = { -1,-1,-1,0,0,1,1,1 };  // X方向偏移量数组
 const int OFFSET_Y[] = { -1,0,1,-1,1,-1,0,1 };  // Y方向偏移量数组
@@ -132,10 +129,9 @@ public:
     int negamaxWithAlphaBetaPruning(const int depth, int alpha, const int beta,
         const PieceStatus pieceFlag, int& bestX, int& bestY,
         bool isTopLevel = false);
-    GamePhase determineGamePhase()const;
+    GamePhase determineGamePhase ()const;
     void findEmptyPositionToPlace(const PieceStatus pieceFlag, int& x, int& y) const;
     bool checkForFiveInARow(const int x, const int y, const PieceStatus pieceFlag) const;
-    std::string generateSymmetricKey(const std::string& key, int symmetryType);
     void initOpeningBook();
     bool checkLinePattern(const int x, const int y, const PieceStatus pieceFlag, const int targetCount, const int targetEmpty);
     // ... 其他需要的方法（如negamax搜索、评估函数等）
@@ -167,47 +163,6 @@ void GomokuGame::handleStart() {
 
     printf("OK\n");
     fflush(stdout);
-}
-// === 生成对称开局序列键 ===
-std::string GomokuGame::generateSymmetricKey(const std::string& key, int symmetryType) {
-    // symmetryType: 0=原型, 1=水平翻转, 2=垂直翻转, 3=对角线翻转(主对角), 4=反对角线, 5=旋转180
-    std::vector<int> coords;
-    std::stringstream ss(key);
-    std::string token;
-    while (std::getline(ss, token, ',')) {
-        coords.push_back(std::stoi(token));
-    }
-
-    std::string newKey;
-    for (size_t i = 0; i < coords.size(); i += 2) {
-        int x = coords[i];
-        int y = coords[i + 1];
-        int nx = x, ny = y;
-        switch (symmetryType) {
-        case 1: // 水平翻转
-            nx = BOARD_DIMENSION - 1 - x;
-            break;
-        case 2: // 垂直翻转
-            ny = BOARD_DIMENSION - 1 - y;
-            break;
-        case 3: // 主对角线翻转
-            std::swap(nx, ny);
-            break;
-        case 4: // 反对角线翻转
-            nx = BOARD_DIMENSION - 1 - y;
-            ny = BOARD_DIMENSION - 1 - x;
-            break;
-        case 5: // 旋转180°
-            nx = BOARD_DIMENSION - 1 - x;
-            ny = BOARD_DIMENSION - 1 - y;
-            break;
-        default:
-            break;
-        }
-        if (!newKey.empty()) newKey += ",";
-        newKey += std::to_string(nx) + "," + std::to_string(ny);
-    }
-    return newKey;
 }
 
 // 处理PLACE命令（替代原processOpponentMove函数）
@@ -242,68 +197,14 @@ void GomokuGame::handleTurn() {
  * 返回值:      void
  */
 void GomokuGame::initOpeningBook() {
-    openingBook.clear();
-
-    auto addOpening = [&](const std::string& key, const OpeningMove& move) {
-        openingBook[key] = move;
-        for (int t = 1; t <= 5; t++) {  // 五种对称形式
-            std::string symKey = generateSymmetricKey(key, t);
-            openingBook[symKey] = move;
-        }
-        };
-
-    // ======== 直指类 ========
-    addOpening("5,5,6,5,7,5", OpeningMove(8, 5));   // 寒星局
-    addOpening("5,5,6,5,7,6", OpeningMove(8, 6));   // 溪月局
-    addOpening("5,5,6,5,7,4", OpeningMove(8, 4));   // 疏星局
-    addOpening("5,5,6,5,6,6", OpeningMove(7, 7));   // 花月局
-    addOpening("5,5,6,5,6,4", OpeningMove(7, 3));   // 残月局
-    addOpening("5,5,6,5,5,6", OpeningMove(4, 7));   // 雨月局
-    addOpening("5,5,6,5,7,7", OpeningMove(4, 6));   // 金星局
-    addOpening("5,5,6,5,5,4", OpeningMove(4, 3));   // 松月局
-    addOpening("5,5,6,5,4,6", OpeningMove(3, 7));   // 丘月局
-    addOpening("5,5,6,5,4,4", OpeningMove(3, 3));   // 新月局
-    addOpening("5,5,6,5,4,5", OpeningMove(3, 5));   // 瑞星局
-    addOpening("5,5,6,5,5,3", OpeningMove(4, 2));   // 山月局
-    addOpening("5,5,6,5,4,7", OpeningMove(2, 7));   // 游星局（白强）
-
-    // ======== 斜指类 ========
-    addOpening("5,5,6,6,7,7", OpeningMove(4, 6));   // 长星局
-    addOpening("5,5,6,6,7,6", OpeningMove(8, 5));   // 峡月局
-    addOpening("5,5,6,6,7,5", OpeningMove(7, 8));   // 恒星局
-    addOpening("5,5,6,6,7,4", OpeningMove(8, 4));   // 水月局
-    addOpening("5,5,6,6,8,4", OpeningMove(8, 5));   // 流星局
-    addOpening("5,5,6,6,6,7", OpeningMove(7, 8));   // 云月局
-    addOpening("5,5,6,6,6,7", OpeningMove(5, 8));   // 浦月局（黑必胜）
-    addOpening("5,5,6,6,5,7", OpeningMove(4, 8));   // 岚月局
-    addOpening("5,5,6,6,7,5", OpeningMove(8, 7));   // 银月局
-    addOpening("5,5,6,6,5,6", OpeningMove(4, 7));   // 明星局
-    addOpening("5,5,6,6,4,7", OpeningMove(3, 8));   // 斜月局
-    addOpening("5,5,6,6,4,6", OpeningMove(3, 7));   // 名月局
-    addOpening("5,5,6,6,4,4", OpeningMove(3, 3));   // 彗星局（白必胜）
-    // ======== 扩展AI自定义开局库 ========
-
-// A. 十字平衡型：你当前的局
-    addOpening("5,5,6,6,6,5,5,6", OpeningMove(7, 7));  // 建议黑向右下发展
-
-    // B. 对称右下型：双方集中右下角
-    addOpening("6,6,7,7,7,6,6,7", OpeningMove(8, 8));  // 黑持续攻势
-    addOpening("5,5,6,6,5,6,6,7", OpeningMove(7, 7));  // 黑转中攻
-
-    // C. 双翼平行型：黑两子在同一行
-    addOpening("5,5,6,5,7,5,8,5", OpeningMove(9, 5));  // 黑连线推进
-    addOpening("5,5,5,6,5,7,5,8", OpeningMove(5, 9));  // 纵向进攻
-
-    // D. 中心双活型：白连二靠中心
-    addOpening("6,6,6,7,5,6,7,7", OpeningMove(8, 6));  // 黑封中
-    addOpening("5,5,5,6,6,6,6,7", OpeningMove(7, 6));  // 黑压线
-
-    // E. 防御起手型：黑离中心展开
-    addOpening("5,5,4,4,3,3", OpeningMove(5, 4));      // 黑靠近中心
-    addOpening("5,5,7,7,8,8", OpeningMove(6, 6));      // 黑回归天元
-    addOpening("6,6,8,8,7,7", OpeningMove(7, 6));      // 黑封斜线
+    // 示例1：在中心(5,5)落子后对应(3,3)
+    openingBook["5,5"] = OpeningMove(3, 3);
+    // 示例2：(5,5)后(3,3)再(7,7)对应(4,6)
+    openingBook["5,5,3,3,7,7"] = OpeningMove(4, 6);
+    // 示例3：(5,5)后(3,3)再(4,4)对应(6,6)
+    openingBook["5,5,3,3,4,4"] = OpeningMove(6, 6);
+    // 可根据需要添加更多开局走法...
 }
-
 
 
 

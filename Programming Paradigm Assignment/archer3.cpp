@@ -8,36 +8,7 @@
 #include <string.h>                              // C 语言字符串处理库
 #include <time.h>        
 #include <string>
-#include <sstream>
-#include <vector>
 
-/* 定义常量变量 */
-const int OFFSET_X[] = { -1,-1,-1,0,0,1,1,1 };  // X方向偏移量数组
-const int OFFSET_Y[] = { -1,0,1,-1,1,-1,0,1 };  // Y方向偏移量数组
-const int BOARD_DIMENSION = 12;  // 棋盘尺寸
-const int INVALID_POSITION = -1;  // 无效坐标
-const int MAX_EVALUATION_SCORE = 1000000000;  // 最高评分
-const int MIN_EVALUATION_SCORE = -1000000000;  // 最低评分
-const int FIVE_IN_A_LINE_SCORE = 10000000;  // 五子连珠评分
-const int LIVE_FOUR_SCORE = 100000;  // 活四评分
-const int BLOCKED_FOUR_SCORE = 1000;  // 冲四评分
-const int LIVE_THREE_SCORE = 1000;  // 活三评分
-const int BLOCKED_THREE_SCORE = 100;  // 冲三评分
-const int LIVE_TWO_SCORE = 100;  // 活二评分
-const int BLOCKED_TWO_SCORE = 10;  // 冲二评分
-const int LIVE_ONE_SCORE = 10;  // 活一评分
-const int BLOCKED_ONE_SCORE = 1;  // 冲一评分
-const int SEARCH_DEPTH_LEVEL = 3;  // 搜索深度等级
-
-
-
-
-// 游戏阶段枚举
-enum GamePhase {
-    OPENING_PHASE,   // 开局阶段（前15步）
-    MIDGAME_PHASE,   // 中局阶段（15-30步）
-    ENDGAME_PHASE    // 残局阶段（30步后或空位<20）
-};
 // 开局走法结构体，存储坐标信息
 struct OpeningMove {
     int xCoordinate;  // x坐标
@@ -76,163 +47,59 @@ typedef struct {
     int searchDepth;  // 搜索深度
     int positionScore;  // 位置评分
 } HashTableEntry;
-// 走法历史结构体，记录每一步的信息
-struct MoveHistoryRecord {
-    int xCoordinate;    // x坐标
-    int yCoordinate;    // y坐标
-    PieceStatus pieceFlag;  // 棋子状态
-};
-class GomokuGame {
-private:
-    // ===== 成员变量（从全局变量迁移至此）=====
-    PieceStatus gameBoard[BOARD_DIMENSION][BOARD_DIMENSION];  // 棋盘状态
-    PieceStatus ourPieceColor;                               // 己方棋子颜色
-    PieceStatus opponentPieceColor;                          // 对手棋子颜色
-    int ourPieceScores[BOARD_DIMENSION][BOARD_DIMENSION];  // 己方分数
-    int opponentPieceScores[BOARD_DIMENSION][BOARD_DIMENSION];  // 对手分数
-    ULL zobristHashTable[BOARD_DIMENSION][BOARD_DIMENSION][3];  // Zobrist哈希表
-    ULL currentZobristHashValue;                     // 当前哈希值
-    MoveHistoryRecord moveHistoryArray[BOARD_DIMENSION * BOARD_DIMENSION];  // 落子历史
-    int moveCounter;                                 // 落子计数
-    std::unordered_map<std::string, OpeningMove> openingBook;  // 开局库
-    std::unordered_map<ULL, HashTableEntry> transpositionTable;  // 置换表（关键修复）
 
-public:
-    // ===== 构造函数（初始化变量）=====
-    // 构造函数初始化列表中使用枚举值
-    GomokuGame() :
-        ourPieceColor(EmptyPosition),  // 用枚举值而非 0
-        opponentPieceColor(EmptyPosition),
-        currentZobristHashValue(0),
-        moveCounter(0) {
-        memset(gameBoard, 0, sizeof(gameBoard));
-        memset(ourPieceScores, 0, sizeof(ourPieceScores));
-        memset(opponentPieceScores, 0, sizeof(opponentPieceScores));
-        // 可在此处初始化开局库
-    }
+/* 定义常量变量 */
+const int OFFSET_X[] = { -1,-1,-1,0,0,1,1,1 };  // X方向偏移量数组
+const int OFFSET_Y[] = { -1,0,1,-1,1,-1,0,1 };  // Y方向偏移量数组
+const int BOARD_DIMENSION = 12;  // 棋盘尺寸
+const int INVALID_POSITION = -1;  // 无效坐标
+const int MAX_EVALUATION_SCORE = 1000000000;  // 最高评分
+const int MIN_EVALUATION_SCORE = -1000000000;  // 最低评分
+const int FIVE_IN_A_LINE_SCORE = 10000000;  // 五子连珠评分
+const int LIVE_FOUR_SCORE = 100000;  // 活四评分
+const int BLOCKED_FOUR_SCORE = 1000;  // 冲四评分
+const int LIVE_THREE_SCORE = 1000;  // 活三评分
+const int BLOCKED_THREE_SCORE = 100;  // 冲三评分
+const int LIVE_TWO_SCORE = 100;  // 活二评分
+const int BLOCKED_TWO_SCORE = 10;  // 冲二评分
+const int LIVE_ONE_SCORE = 10;  // 活一评分
+const int BLOCKED_ONE_SCORE = 1;  // 冲一评分
+const int SEARCH_DEPTH_LEVEL = 3;  // 搜索深度等级
 
-    // ===== 命令处理方法（替代原全局函数）=====
-    void handleStart();        // 处理START命令（替代startGame）
-    void handlePlace();        // 处理PLACE命令（替代processOpponentMove）
-    void handleTurn();         // 处理TURN命令（替代makeOurMove）
-    bool attemptNextMove(int& nextX, int& nextY, int& score);  // 保留原逻辑，改为成员函数
-    void makeChessMove(const int x, const int y, const PieceStatus pieceFlag = EmptyPosition);  // 改为成员函数
-    inline bool isWithinBoardBounds(const int x, const int y) const {
-        return (x >= 0 && x < BOARD_DIMENSION && y >= 0 && y < BOARD_DIMENSION);
-    }
-    // 更新Zobrist哈希值
-    inline void updateZobristHashValue(const int x, const int y, const PieceStatus pieceFlag) {
-        currentZobristHashValue ^= zobristHashTable[x][y][pieceFlag];
-    }
-    void updatePositionScores(const int x, const int y);
-    int evaluateSinglePoint(const int x, const int y, const PieceStatus pieceFlag) const;
-    int evaluateOverallBoard() const;
-    void generateCandidateMoves(ChessMove moves[], int& movesLength, const PieceStatus pieceFlag);
-    bool hasAdjacentPieces(const int x, const int y, const int checkRadius = 1, int requiredCount = 1)const;
-    int negamaxWithAlphaBetaPruning(const int depth, int alpha, const int beta,
-        const PieceStatus pieceFlag, int& bestX, int& bestY,
-        bool isTopLevel = false);
-    GamePhase determineGamePhase()const;
-    void findEmptyPositionToPlace(const PieceStatus pieceFlag, int& x, int& y) const;
-    bool checkForFiveInARow(const int x, const int y, const PieceStatus pieceFlag) const;
-    std::string generateSymmetricKey(const std::string& key, int symmetryType);
-    void initOpeningBook();
-    bool checkLinePattern(const int x, const int y, const PieceStatus pieceFlag, const int targetCount, const int targetEmpty);
-    // ... 其他需要的方法（如negamax搜索、评估函数等）
-};
+/* 定义全局变量 */
+PieceStatus ourPieceColor;  // 我方棋子颜色标记
+PieceStatus opponentPieceColor;  // 对手棋子颜色标记
+PieceStatus gameBoard[BOARD_DIMENSION][BOARD_DIMENSION];  // 棋盘信息
+int ourPieceScores[BOARD_DIMENSION][BOARD_DIMENSION];  // 我方棋子评分
+int opponentPieceScores[BOARD_DIMENSION][BOARD_DIMENSION];  // 对手棋子评分
+int moveCounter;  // 步数计数器
+ULL zobristHashTable[BOARD_DIMENSION][BOARD_DIMENSION][3];  // Zobrist哈希表
+ULL currentZobristHashValue;  // 当前Zobrist哈希值
+std::unordered_map<ULL, HashTableEntry> transpositionTable;  // Zobrist置换表
 
-void GomokuGame::handleStart() {
-    scanf("%d", &this->ourPieceColor);
-    this->opponentPieceColor = static_cast<PieceStatus>(3 - ourPieceColor);  // 假设3-Color是对立颜色逻辑
-
-    // 初始化Zobrist哈希表（原逻辑迁移）
-    std::random_device randomDevice;
-    std::mt19937_64 randomNumberGenerator(randomDevice());
-    std::uniform_int_distribution<ULL> uniformDistribution;
-    for (int i = 0; i < BOARD_DIMENSION; i++) {
-        for (int j = 0; j < BOARD_DIMENSION; j++) {
-            for (int k = 0; k < 3; k++) {
-                this->zobristHashTable[i][j][k] = uniformDistribution(randomNumberGenerator);
-            }
-        }
-    }
-    this->currentZobristHashValue = 0;
-
-    // 初始落子（原逻辑迁移）
-    this->makeChessMove(5, 5, WhitePiece);
-    this->makeChessMove(6, 6, WhitePiece);
-    this->makeChessMove(5, 6, BlackPiece);
-    this->makeChessMove(6, 5, BlackPiece);
-    this->moveCounter = 4;
-
-    printf("OK\n");
-    fflush(stdout);
-}
-// === 生成对称开局序列键 ===
-std::string GomokuGame::generateSymmetricKey(const std::string& key, int symmetryType) {
-    // symmetryType: 0=原型, 1=水平翻转, 2=垂直翻转, 3=对角线翻转(主对角), 4=反对角线, 5=旋转180
-    std::vector<int> coords;
-    std::stringstream ss(key);
-    std::string token;
-    while (std::getline(ss, token, ',')) {
-        coords.push_back(std::stoi(token));
-    }
-
-    std::string newKey;
-    for (size_t i = 0; i < coords.size(); i += 2) {
-        int x = coords[i];
-        int y = coords[i + 1];
-        int nx = x, ny = y;
-        switch (symmetryType) {
-        case 1: // 水平翻转
-            nx = BOARD_DIMENSION - 1 - x;
-            break;
-        case 2: // 垂直翻转
-            ny = BOARD_DIMENSION - 1 - y;
-            break;
-        case 3: // 主对角线翻转
-            std::swap(nx, ny);
-            break;
-        case 4: // 反对角线翻转
-            nx = BOARD_DIMENSION - 1 - y;
-            ny = BOARD_DIMENSION - 1 - x;
-            break;
-        case 5: // 旋转180°
-            nx = BOARD_DIMENSION - 1 - x;
-            ny = BOARD_DIMENSION - 1 - y;
-            break;
-        default:
-            break;
-        }
-        if (!newKey.empty()) newKey += ",";
-        newKey += std::to_string(nx) + "," + std::to_string(ny);
-    }
-    return newKey;
+/*
+ * 函数名称:    isWithinBoardBounds
+ * 函数功能:    判断点是否在棋盘范围内
+ * 输入参数:    const int x - x坐标
+ *              const int y - y坐标
+ * 返回值:      bool - 若在范围内返回true，否则返回false
+ */
+inline bool isWithinBoardBounds(const int x, const int y)
+{
+    return (x >= 0 && x < BOARD_DIMENSION && y >= 0 && y < BOARD_DIMENSION);
 }
 
-// 处理PLACE命令（替代原processOpponentMove函数）
-void GomokuGame::handlePlace() {
-    int x, y;
-    scanf("%d %d", &x, &y);
-    this->makeChessMove(x, y, this->opponentPieceColor);
-    this->moveCounter++;
-}
-
-// 处理TURN命令（替代原makeOurMove函数）
-void GomokuGame::handleTurn() {
-    int nextX = INVALID_POSITION, nextY = INVALID_POSITION, score = 0;
-    if (this->attemptNextMove(nextX, nextY, score)) {
-        // 假设negamaxWithAlphaBetaPruning改为成员函数
-        score = this->negamaxWithAlphaBetaPruning(SEARCH_DEPTH_LEVEL, MIN_EVALUATION_SCORE, MAX_EVALUATION_SCORE, ourPieceColor, nextX, nextY, true);
-    }
-    if (nextX == INVALID_POSITION || nextY == INVALID_POSITION) {
-        // 假设findEmptyPositionToPlace改为成员函数
-        this->findEmptyPositionToPlace(ourPieceColor, nextX, nextY);
-    }
-    this->makeChessMove(nextX, nextY, ourPieceColor);
-    printf("%d %d\n", nextX, nextY);
-    fflush(stdout);
-    this->moveCounter++;
+/*
+ * 函数名称:    updateZobristHashValue
+ * 函数功能:    更新Zobrist哈希值
+ * 输入参数:    const int x - x坐标
+ *              const int y - y坐标
+ *              const PieceStatus pieceFlag - 棋子状态
+ * 返回值:      void
+ */
+inline void updateZobristHashValue(const int x, const int y, const PieceStatus pieceFlag)
+{
+    currentZobristHashValue ^= zobristHashTable[x][y][pieceFlag];
 }
 
 /*
@@ -241,72 +108,31 @@ void GomokuGame::handleTurn() {
  * 输入参数:    无
  * 返回值:      void
  */
-void GomokuGame::initOpeningBook() {
-    openingBook.clear();
-
-    auto addOpening = [&](const std::string& key, const OpeningMove& move) {
-        openingBook[key] = move;
-        for (int t = 1; t <= 5; t++) {  // 五种对称形式
-            std::string symKey = generateSymmetricKey(key, t);
-            openingBook[symKey] = move;
-        }
-        };
-
-    // ======== 直指类 ========
-    addOpening("5,5,6,5,7,5", OpeningMove(8, 5));   // 寒星局
-    addOpening("5,5,6,5,7,6", OpeningMove(8, 6));   // 溪月局
-    addOpening("5,5,6,5,7,4", OpeningMove(8, 4));   // 疏星局
-    addOpening("5,5,6,5,6,6", OpeningMove(7, 7));   // 花月局
-    addOpening("5,5,6,5,6,4", OpeningMove(7, 3));   // 残月局
-    addOpening("5,5,6,5,5,6", OpeningMove(4, 7));   // 雨月局
-    addOpening("5,5,6,5,7,7", OpeningMove(4, 6));   // 金星局
-    addOpening("5,5,6,5,5,4", OpeningMove(4, 3));   // 松月局
-    addOpening("5,5,6,5,4,6", OpeningMove(3, 7));   // 丘月局
-    addOpening("5,5,6,5,4,4", OpeningMove(3, 3));   // 新月局
-    addOpening("5,5,6,5,4,5", OpeningMove(3, 5));   // 瑞星局
-    addOpening("5,5,6,5,5,3", OpeningMove(4, 2));   // 山月局
-    addOpening("5,5,6,5,4,7", OpeningMove(2, 7));   // 游星局（白强）
-
-    // ======== 斜指类 ========
-    addOpening("5,5,6,6,7,7", OpeningMove(4, 6));   // 长星局
-    addOpening("5,5,6,6,7,6", OpeningMove(8, 5));   // 峡月局
-    addOpening("5,5,6,6,7,5", OpeningMove(7, 8));   // 恒星局
-    addOpening("5,5,6,6,7,4", OpeningMove(8, 4));   // 水月局
-    addOpening("5,5,6,6,8,4", OpeningMove(8, 5));   // 流星局
-    addOpening("5,5,6,6,6,7", OpeningMove(7, 8));   // 云月局
-    addOpening("5,5,6,6,6,7", OpeningMove(5, 8));   // 浦月局（黑必胜）
-    addOpening("5,5,6,6,5,7", OpeningMove(4, 8));   // 岚月局
-    addOpening("5,5,6,6,7,5", OpeningMove(8, 7));   // 银月局
-    addOpening("5,5,6,6,5,6", OpeningMove(4, 7));   // 明星局
-    addOpening("5,5,6,6,4,7", OpeningMove(3, 8));   // 斜月局
-    addOpening("5,5,6,6,4,6", OpeningMove(3, 7));   // 名月局
-    addOpening("5,5,6,6,4,4", OpeningMove(3, 3));   // 彗星局（白必胜）
-    // ======== 扩展AI自定义开局库 ========
-
-// A. 十字平衡型：你当前的局
-    addOpening("5,5,6,6,6,5,5,6", OpeningMove(7, 7));  // 建议黑向右下发展
-
-    // B. 对称右下型：双方集中右下角
-    addOpening("6,6,7,7,7,6,6,7", OpeningMove(8, 8));  // 黑持续攻势
-    addOpening("5,5,6,6,5,6,6,7", OpeningMove(7, 7));  // 黑转中攻
-
-    // C. 双翼平行型：黑两子在同一行
-    addOpening("5,5,6,5,7,5,8,5", OpeningMove(9, 5));  // 黑连线推进
-    addOpening("5,5,5,6,5,7,5,8", OpeningMove(5, 9));  // 纵向进攻
-
-    // D. 中心双活型：白连二靠中心
-    addOpening("6,6,6,7,5,6,7,7", OpeningMove(8, 6));  // 黑封中
-    addOpening("5,5,5,6,6,6,6,7", OpeningMove(7, 6));  // 黑压线
-
-    // E. 防御起手型：黑离中心展开
-    addOpening("5,5,4,4,3,3", OpeningMove(5, 4));      // 黑靠近中心
-    addOpening("5,5,7,7,8,8", OpeningMove(6, 6));      // 黑回归天元
-    addOpening("6,6,8,8,7,7", OpeningMove(7, 6));      // 黑封斜线
+void initOpeningBook() {
+    // 示例1：在中心(5,5)落子后对应(3,3)
+    openingBook["5,5"] = OpeningMove(3, 3);
+    // 示例2：(5,5)后(3,3)再(7,7)对应(4,6)
+    openingBook["5,5,3,3,7,7"] = OpeningMove(4, 6);
+    // 示例3：(5,5)后(3,3)再(4,4)对应(6,6)
+    openingBook["5,5,3,3,4,4"] = OpeningMove(6, 6);
+    // 可根据需要添加更多开局走法...
 }
 
+// 走法历史结构体，记录每一步的信息
+struct MoveHistoryRecord {
+    int xCoordinate;    // x坐标
+    int yCoordinate;    // y坐标
+    PieceStatus pieceFlag;  // 棋子状态
+};
 
+MoveHistoryRecord moveHistoryArray[BOARD_DIMENSION * BOARD_DIMENSION];  // 存储走法历史记录
 
-
+// 游戏阶段枚举
+enum GamePhase {
+    OPENING_PHASE,   // 开局阶段（前15步）
+    MIDGAME_PHASE,   // 中局阶段（15-30步）
+    ENDGAME_PHASE    // 残局阶段（30步后或空位<20）
+};
 
 /*
  * 函数名称:    determineGamePhase
@@ -314,7 +140,7 @@ void GomokuGame::initOpeningBook() {
  * 输入参数:    无
  * 返回值:      GamePhase - 当前游戏阶段
  */
-GamePhase GomokuGame::determineGamePhase()const {
+GamePhase determineGamePhase() {
     int emptyPositionCount = 0;
     for (int i = 0; i < BOARD_DIMENSION; i++) {
         for (int j = 0; j < BOARD_DIMENSION; j++) {
@@ -342,7 +168,7 @@ GamePhase GomokuGame::determineGamePhase()const {
  *              int requiredCount - 需要的相邻棋子数量
  * 返回值:      bool - 若满足条件返回true，否则返回false
  */
-bool GomokuGame::hasAdjacentPieces(const int x, const int y, const int checkRadius, int requiredCount)const
+bool hasAdjacentPieces(const int x, const int y, const int checkRadius = 1, int requiredCount = 1)
 {
     /* 确定检查范围 */
     int startRow = std::max(0, x - checkRadius);
@@ -532,7 +358,7 @@ int evaluatePositionState(const int pieceCount, const int blockCount, const int 
  *              const PieceStatus pieceFlag - 棋子状态
  * 返回值:      int - 该点的评分
  */
-int GomokuGame::evaluateSinglePoint(const int x, const int y, const PieceStatus pieceFlag)const
+int evaluateSinglePoint(const int x, const int y, const PieceStatus pieceFlag)
 {
     /* 水平方向 ( - ) */
     int totalScore = 0, consecutiveCount = 1, blockCount = 0, emptyPositionCount = -1;
@@ -768,7 +594,7 @@ int GomokuGame::evaluateSinglePoint(const int x, const int y, const PieceStatus 
  * 输入参数:    无
  * 返回值:      int - 棋盘整体评分
  */
-int GomokuGame::evaluateOverallBoard(void)const
+int evaluateOverallBoard(void)
 {
     int evaluationResult = 0;
     for (int i = 0; i < BOARD_DIMENSION; i++) {
@@ -791,7 +617,7 @@ int GomokuGame::evaluateOverallBoard(void)const
  *              const int y - y坐标
  * 返回值:      void
  */
-void GomokuGame::updatePositionScores(const int x, const int y)
+void updatePositionScores(const int x, const int y)
 {
     /* 更新当前点评分 */
     if (gameBoard[x][y] == ourPieceColor) {
@@ -832,7 +658,7 @@ void GomokuGame::updatePositionScores(const int x, const int y)
  *              const PieceStatus pieceFlag - 棋子状态（默认空）
  * 返回值:      void
  */
-void GomokuGame::makeChessMove(const int x, const int y, const PieceStatus pieceFlag) {
+void makeChessMove(const int x, const int y, const PieceStatus pieceFlag = EmptyPosition) {
     updateZobristHashValue(x, y, gameBoard[x][y]);
     gameBoard[x][y] = pieceFlag;
     updateZobristHashValue(x, y, pieceFlag);
@@ -851,7 +677,7 @@ void GomokuGame::makeChessMove(const int x, const int y, const PieceStatus piece
  *              int& bestY - 最佳y坐标
  * 返回值:      void
  */
-void GomokuGame::findEmptyPositionToPlace(const PieceStatus pieceFlag, int& bestX, int& bestY)const
+void findEmptyPositionToPlace(const PieceStatus pieceFlag, int& bestX, int& bestY)
 {
     for (int i = 0; i < BOARD_DIMENSION; i++) {
         for (int j = 0; j < BOARD_DIMENSION; j++) {
@@ -872,7 +698,7 @@ void GomokuGame::findEmptyPositionToPlace(const PieceStatus pieceFlag, int& best
  *              const PieceStatus pieceFlag - 棋子状态
  * 返回值:      bool - 若形成返回true，否则返回false
  */
-bool GomokuGame::checkForFiveInARow(const int x, const int y, const PieceStatus pieceFlag)const
+bool checkForFiveInARow(const int x, const int y, const PieceStatus pieceFlag)
 {
     int i, j, consecutiveCount;
     for (int direction = 4; direction < 8; direction++) {
@@ -908,7 +734,7 @@ bool GomokuGame::checkForFiveInARow(const int x, const int y, const PieceStatus 
  *              const int targetEmpty - 目标空位数
  * 返回值:      bool - 若符合棋型返回true，否则返回false
  */
-bool GomokuGame::checkLinePattern(const int x, const int y, const PieceStatus pieceFlag, const int targetCount, const int targetEmpty)
+bool checkLinePattern(const int x, const int y, const PieceStatus pieceFlag, const int targetCount, const int targetEmpty)
 {
     int i, j, consecutiveCount, emptyCount;
     for (int direction = 4; direction < 8; direction++) {
@@ -961,7 +787,7 @@ bool GomokuGame::checkLinePattern(const int x, const int y, const PieceStatus pi
  *              const PieceStatus pieceFlag - 棋子状态
  * 返回值:      void
  */
-void GomokuGame::generateCandidateMoves(ChessMove moves[], int& movesLength, const PieceStatus pieceFlag)
+void generateCandidateMoves(ChessMove moves[], int& movesLength, const PieceStatus pieceFlag)
 {
     /* 寻找候选点 */
     movesLength = 0;
@@ -998,7 +824,7 @@ void GomokuGame::generateCandidateMoves(ChessMove moves[], int& movesLength, con
  *              bool isTopLevel - 是否顶层调用
  * 返回值:      int - 评分
  */
-int GomokuGame::negamaxWithAlphaBetaPruning(const int depth, int alpha, const int beta, const PieceStatus pieceFlag, int& bestX, int& bestY, bool isTopLevel)
+int negamaxWithAlphaBetaPruning(const int depth, int alpha, const int beta, const PieceStatus pieceFlag, int& bestX, int& bestY, bool isTopLevel = false)
 {
     /* 检查置换表 */
     std::unordered_map<ULL, HashTableEntry>::iterator it = transpositionTable.find(currentZobristHashValue);
@@ -1052,7 +878,7 @@ int GomokuGame::negamaxWithAlphaBetaPruning(const int depth, int alpha, const in
  *              int& score - 评分
  * 返回值:      bool - 若需要进一步搜索返回true，否则返回false
  */
-bool GomokuGame::attemptNextMove(int& nextX, int& nextY, int& score)
+bool attemptNextMove(int& nextX, int& nextY, int& score)
 {
     // 首先查询开局库
     std::string moveSequence;
@@ -1146,28 +972,105 @@ bool GomokuGame::attemptNextMove(int& nextX, int& nextY, int& score)
 
     return true;
 }
+
+/*
+ * 函数名称:    startGame
+ * 函数功能:    开始游戏
+ * 输入参数:    无
+ * 返回值:      void
+ */
+void startGame(void)
+{
+    /* 获取我方棋子颜色 */
+    scanf("%d", &ourPieceColor);
+
+    /* 初始化 */
+    opponentPieceColor = static_cast<PieceStatus>(3 - ourPieceColor);
+    memset(gameBoard, 0, sizeof(gameBoard));
+    memset(ourPieceScores, 0, sizeof(ourPieceScores));
+    memset(opponentPieceScores, 0, sizeof(opponentPieceScores));
+
+    /* 初始化Zobrist哈希表 */
+    std::random_device randomDevice;  // 非确定性随机数生成器
+    std::mt19937_64 randomNumberGenerator(randomDevice());  // 基于梅森旋转算法的随机数生成器
+    std::uniform_int_distribution<ULL> uniformDistribution;  // 用于生成64位无符号整数的均匀分布
+    for (int i = 0; i < BOARD_DIMENSION; i++) {
+        for (int j = 0; j < BOARD_DIMENSION; j++) {
+            for (int k = 0; k < 3; k++) {
+                zobristHashTable[i][j][k] = uniformDistribution(randomNumberGenerator);
+            }
+        }
+    }
+    currentZobristHashValue = 0;
+
+    /* 默认初始走法 */
+    makeChessMove(5, 5, WhitePiece);
+    makeChessMove(6, 6, WhitePiece);
+    makeChessMove(5, 6, BlackPiece);
+    makeChessMove(6, 5, BlackPiece);
+    moveCounter = 4;
+
+    /* 响应终端程序 */
+    printf("OK\n");
+    fflush(stdout);
+}
+
+/*
+ * 函数名称:    processOpponentMove
+ * 函数功能:    处理对手走棋
+ * 输入参数:    无
+ * 返回值:      void
+ */
+void processOpponentMove(void)
+{
+    ChessMove opponentCommand = { 0, 0, 0 };
+    scanf("%d %d", &opponentCommand.xCoordinate, &opponentCommand.yCoordinate);
+    makeChessMove(opponentCommand.xCoordinate, opponentCommand.yCoordinate, opponentPieceColor);
+    moveCounter++;
+}
+
+/*
+ * 函数名称:    makeOurMove
+ * 函数功能:    执行我方走棋
+ * 输入参数:    无
+ * 返回值:      void
+ */
+void makeOurMove(void)
+{
+    int nextX = INVALID_POSITION, nextY = INVALID_POSITION, score = 0;
+    if (attemptNextMove(nextX, nextY, score)) {
+        score = negamaxWithAlphaBetaPruning(SEARCH_DEPTH_LEVEL, MIN_EVALUATION_SCORE, MAX_EVALUATION_SCORE, ourPieceColor, nextX, nextY, true);
+    }
+    if (nextX == INVALID_POSITION || nextY == INVALID_POSITION) {
+        findEmptyPositionToPlace(ourPieceColor, nextX, nextY);
+    }
+    makeChessMove(nextX, nextY, ourPieceColor);
+    printf("%d %d\n", nextX, nextY);
+    fflush(stdout);
+    moveCounter++;
+}
+
 /*
  * 函数名称:    main
  * 函数功能:    主函数
  * 返回值:      0
  */
- // 新的main函数（替代原main）
-int main() {
-    GomokuGame game;  // 创建游戏实例
+int main()
+{
     char commandTag[10] = { 0 };
     while (true) {
         memset(commandTag, 0, sizeof(commandTag));
         scanf("%s", commandTag);
-        if (!strcmp(commandTag, "START")) {
-            game.handleStart();  // 调用成员方法处理START
+        if (!strcmp(commandTag, "START")) {  // 开始游戏
+            startGame();
         }
-        else if (!strcmp(commandTag, "PLACE")) {
-            game.handlePlace();  // 调用成员方法处理PLACE
+        else if (!strcmp(commandTag, "PLACE")) {  // 对手走棋
+            processOpponentMove();
         }
-        else if (!strcmp(commandTag, "TURN")) {
-            game.handleTurn();   // 调用成员方法处理TURN
+        else if (!strcmp(commandTag, "TURN")) {  // 我方走棋
+            makeOurMove();
         }
-        else if (!strcmp(commandTag, "END")) {
+        else if (!strcmp(commandTag, "END")) {  // 游戏结束
             int gameStatus;
             scanf("%d", &gameStatus);
             return 0;
