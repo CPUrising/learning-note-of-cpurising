@@ -15,7 +15,7 @@ using namespace std;
 
 bool hasNeighbor(int x, int y, int distance = 2);
 // 调试开关：1=启用调试输出，0=禁用调试输出
-#define DEBUG_MODE 1  // 实际对战时设为0即可关闭所有调试信息
+#define DEBUG_MODE 0  // 实际对战时设为0即可关闭所有调试信息
 
 // 棋盘配置
 const int BOARD_SIZE = 12;    // 棋盘大小
@@ -375,40 +375,52 @@ LLS scorePosition(int x, int y, int player) {
     // 撤销临时落子
     update_board(x, y, EMPTY);
 
-    // 阈值放大（把中等威胁提升为高优先级）
-    if (rivalScore >= 1400 && rivalScore < 1000000) {
-        rivalScore = 1000000;
+    // KAMI 风格：把我方进攻分和对手威胁分“相加”形成综合强度基底，
+    // 但随后对敌方高威胁给出 *巨大* 惩罚，确保这些点在候选阶段不会被丢弃。
+
+    if (rivalScore >= 1400 && rivalScore < 1000000) rivalScore = 1000000;
+    if (myScore >= 1400 && myScore < 1000000) myScore = 1000000;
+
+    // 合成基底：同时考虑我方进攻与敌方威胁
+    LLS total = myScore + rivalScore;
+
+    // 强烈放大敌方高威胁（防守点绝不被舍弃）
+    // 注意：styles.EnemyStyle/ MyStyle 的索引需要与你的 styles 表一致
+    if (rivalScore >= styles.EnemyStyle[7].score) { // 成五（极端）
+        total -= 120000000LL;
     }
-    if (myScore >= 1400 && myScore < 1000000) {
-        myScore = 1000000;
+    else if (rivalScore >= styles.EnemyStyle[6].score) { // 活四
+        total -= 60000000LL;
+    }
+    else if (rivalScore >= styles.EnemyStyle[5].score) { // 冲四
+        total -= 25000000LL;
+    }
+    else if (rivalScore >= styles.EnemyStyle[4].score) { // 活三
+        total -= 8000000LL;
     }
 
-    // 综合评分：以防守优先 (进攻 - 对手威胁)
-    LLS total = myScore - rivalScore;
+    // 奖励我方高威胁以鼓励反攻
+    if (myScore >= styles.MyStyle[6].score) total += 30000000LL;
+    else if (myScore >= styles.MyStyle[4].score) total += 5000000LL;
 
-    // 对敌方高威胁额外惩罚（强制优先防守）
-    if (rivalScore >= styles.EnemyStyle[6].score) total -= 12000000; // 敌方活四
-    else if (rivalScore >= styles.EnemyStyle[5].score) total -= 10000000; // 敌方冲四
-    else if (rivalScore >= styles.EnemyStyle[4].score) total -= 6000000; // 敌方活三
-    // 如果敌方落此点能立刻赢，则立即强制防守
-    for (int d = 0; d < 4; ++d) {
-        int sEnemy = detectStyle(x, y, dirs[d][0], dirs[d][1], opponent);
-        if (sEnemy >= 7) {
-            total -= 50000000; // 必防立即胜点
-            break;
-        }
-        else if (sEnemy == 6) {
-            total -= 30000000; // 活四威胁
-        }
-        else if (sEnemy == 5) {
-            total -= 15000000; // 冲四威胁
-        }
-    }
-    // 边缘惩罚（靠近边界的点价值下降）
+    // 轻微边缘惩罚，优先中心
     if (x < 2 || y < 2 || x > BOARD_SIZE - 3 || y > BOARD_SIZE - 3)
         total -= 5000;
+    // --- 新增：双向组合加权（强化主动连击判断） ---
+    int comboCount = 0;
+    for (int d = 0; d < 4; ++d) {
+        int dx = dirs[d][0], dy = dirs[d][1];
+        int left = detectStyle(x - dx, y - dy, -dx, -dy, player);
+        int right = detectStyle(x + dx, y + dy, dx, dy, player);
+        int totalLine = left + right - 2; // 避免重复计中心
+        if (totalLine >= 6) comboCount++; // 两头相加 ≥6 表示至少连四潜力
+    }
+    // 奖励多方向成型（多 combo → 强攻）
+    if (comboCount >= 2) total += 12000000LL;
+    else if (comboCount == 1) total += 3000000LL;
 
     return total;
+
 }
 
 // 评估当前棋盘得分（保留原 evaluate 逻辑调用新版 scorePosition）
@@ -473,7 +485,9 @@ LLS alphaBeta(int depth, LLS alpha, LLS beta) {
         [](const pair<LLS, pair<int, int>>& a, const pair<LLS, pair<int, int>>& b) {
             return a.first > b.first;
         });
-    if (candidateMoves.size() > 6) candidateMoves.resize(6);
+    int limit = (depth > 4) ? 6 : 10; // depth>4 → 更严格（例如深层只保 6 个）；浅层可放宽到 10
+    if (candidateMoves.size() > (size_t)limit) candidateMoves.resize(limit);
+
 
     LLS bestValue = -9e18;
     LLS alphaOrig = alpha;
@@ -522,183 +536,174 @@ LLS alphaBeta(int depth, LLS alpha, LLS beta) {
     return bestValue;
 }
 
-pair<int,int> get_best_move() {
+pair<int, int> get_best_move() {
+    // 清空 transposition / eval cache 避免旧条目干扰（如果你有 hashTable）
+    // 假如你的置换表名字是 hashTable，大小为 HASH_SIZE:
+    // memset(hashTable, 0, sizeof(HashEntry) * HASH_SIZE);
+    // 若没有置换表，可注释或省略此行
+
     int enemy = (my_color == BLACK) ? WHITE : BLACK;
-    int dirs[4][2] = {{0,1},{1,0},{1,1},{1,-1}};
+    int dirs[4][2] = { {0,1},{1,0},{1,1},{1,-1} };
 
-    // 0) 我方即胜扫描 —— 若我方某步能直接赢，立刻返回
-    for (int x = 0; x < BOARD_SIZE; ++x) {
-        for (int y = 0; y < BOARD_SIZE; ++y) {
-            if (!is_valid_pos(x,y)) continue;
-            update_board(x, y, my_color);
-            bool win = false;
-            for (int d = 0; d < 4; ++d) {
-                int s = detectStyle(x, y, dirs[d][0], dirs[d][1], my_color);
-                if (s >= 7) { win = true; break; }   // 成五
-                if (s == 6) { win = true; break; }   // 活四 -> 也可视为马上赢
-            }
-            update_board(x, y, EMPTY);
-            if (win) {
-#if DEBUG_MODE==1
-                printf("DEBUG: immediate WIN at (%d,%d)\n", x, y); fflush(stdout);
-#endif
-                return {x,y};
-            }
+    // 0) 我方即胜扫描（若存在直接返回）
+    for (int x = 0; x < BOARD_SIZE; ++x) for (int y = 0; y < BOARD_SIZE; ++y) {
+        if (!is_valid_pos(x, y)) continue;
+        update_board(x, y, my_color);
+        bool win = false;
+        for (int d = 0; d < 4; ++d) {
+            int s = detectStyle(x, y, dirs[d][0], dirs[d][1], my_color);
+            if (s >= 7 || s == 6) { win = true; break; }
         }
+        update_board(x, y, EMPTY);
+        if (win) return { x,y };
     }
 
-    // 1) 敌方即胜/高威胁扫描（包含：敌方落某点能成五/活四/冲四；双活三；并且检查盘上已有的未封口四连）
-    struct Threat { int x,y; int priority; }; // priority 越高越急
+    // 1) 敌方威胁扫描（模拟敌方落子） + 盘面已有四连两端加入
+    struct Threat { int x, y; long long pr; };
     vector<Threat> threats;
-
-    // (A) 检测“若敌方在空位落子会立刻赢/高威胁/双活三”
-    for (int x = 0; x < BOARD_SIZE; ++x) {
-        for (int y = 0; y < BOARD_SIZE; ++y) {
-            if (!is_valid_pos(x,y)) continue;
-            update_board(x,y,enemy);
-            int highThreatCount = 0;
-            int liveThreeCount = 0;
-            int maxStyle = 0;
-            for (int d=0; d<4; ++d) {
-                int s = detectStyle(x,y,dirs[d][0],dirs[d][1],enemy);
-                if (s >= 4) highThreatCount++;   // >=4 (包括活三/冲四/活四)
-                if (s == 4) liveThreeCount++;
-                if (s > maxStyle) maxStyle = s;
-            }
-            update_board(x,y,EMPTY);
-
-            int priority = 0;
-            if (maxStyle >= 7) priority = 10000000;       // 成五
-            else if (highThreatCount >= 2) priority = 9000000; // 双方向高威胁
-            else if (highThreatCount >= 1 && liveThreeCount >=1) priority = 8000000; // 组合威胁
-            else if (highThreatCount >= 1) priority = 7000000; // 冲四/活三/活四
-            else if (liveThreeCount >=2) priority = 6000000; // 双活三
-            if (priority > 0) threats.push_back({x,y,priority});
+    for (int x = 0; x < BOARD_SIZE; ++x) for (int y = 0; y < BOARD_SIZE; ++y) {
+        if (!is_valid_pos(x, y)) continue;
+        update_board(x, y, enemy);
+        int high = 0, live3 = 0, maxS = 0;
+        for (int d = 0; d < 4; ++d) {
+            int s = detectStyle(x, y, dirs[d][0], dirs[d][1], enemy);
+            if (s >= 4) high++;
+            if (s == 4) live3++;
+            if (s > maxS) maxS = s;
         }
+        update_board(x, y, EMPTY);
+        long long priority = 0;
+        if (maxS >= 7) priority = 10000000;
+        else if (high >= 2) priority = 9500000;
+        else if (high >= 1 && live3 >= 1) priority = 9000000;
+        else if (high >= 1) priority = 8000000;
+        else if (live3 >= 2) priority = 7000000;
+        if (priority > 0) threats.push_back({ x,y,priority });
     }
-
-    // (B) 扫描盘面已有连续的 enemy 连子（直接找已有的连 4），并加入两端空点作为高优先
-    for (int i=0; i<BOARD_SIZE; ++i) {
-        for (int j=0; j<BOARD_SIZE; ++j) {
-            if (board[i][j] != enemy) continue;
-            for (int d=0; d<4; ++d) {
-                int dx = dirs[d][0], dy = dirs[d][1];
-                // only consider a sequence head to avoid duplicates
-                if (is_valid_pos(i-dx, j-dy) && board[i-dx][j-dy] == enemy) continue;
-                // count sequence length
-                int cnt = 0, tx = i, ty = j;
-                while (is_valid_pos(tx,ty) && board[tx][ty]==enemy) { cnt++; tx+=dx; ty+=dy; }
-                if (cnt >= 4) {
-                    // two ends
-                    int ex1x = i - dx, ex1y = j - dy;
-                    int ex2x = tx, ex2y = ty;
-                    if (is_valid_pos(ex1x,ex1y) && board[ex1x][ex1y]==EMPTY) threats.push_back({ex1x,ex1y,9500000});
-                    if (is_valid_pos(ex2x,ex2y) && board[ex2x][ex2y]==EMPTY) threats.push_back({ex2x,ex2y,9500000});
-                }
+    // 扫描盘面已有的连子并加入两端
+    for (int i = 0; i < BOARD_SIZE; ++i) for (int j = 0; j < BOARD_SIZE; ++j) {
+        if (board[i][j] != enemy) continue;
+        for (int d = 0; d < 4; ++d) {
+            int dx = dirs[d][0], dy = dirs[d][1];
+            if (is_valid_pos(i - dx, j - dy) && board[i - dx][j - dy] == enemy) continue;
+            int cnt = 0, tx = i, ty = j;
+            while (is_valid_pos(tx, ty) && board[tx][ty] == enemy) { cnt++; tx += dx; ty += dy; }
+            if (cnt >= 4) {
+                int ex1x = i - dx, ex1y = j - dy, ex2x = tx, ex2y = ty;
+                if (is_valid_pos(ex1x, ex1y) && board[ex1x][ex1y] == EMPTY) threats.push_back({ ex1x,ex1y,12000000 });
+                if (is_valid_pos(ex2x, ex2y) && board[ex2x][ex2y] == EMPTY) threats.push_back({ ex2x,ex2y,12000000 });
             }
         }
     }
 
-    // 如果有威胁点，按优先级选最能阻断的点（尽量选能阻多个方向的点）
-    if (!threats.empty()) {
-        // 合并相同坐标的优先级（取最大）
-        map<pair<int,int>, int> bestPr;
-        for (auto &t : threats) {
-            auto key = make_pair(t.x,t.y);
-            if (!bestPr.count(key) || t.priority > bestPr[key]) bestPr[key] = t.priority;
-        }
-        vector<pair<pair<int,int>,int>> merged;
-        for (auto &p : bestPr) merged.emplace_back(p.first, p.second);
-        sort(merged.begin(), merged.end(), [](const pair<pair<int,int>,int>& a, const pair<pair<int,int>,int>& b){
-            if (a.second != b.second) return a.second > b.second;
-            // tiebreak: choose nearer board center to prefer central block
-            int ax = a.first.first, ay = a.first.second, bx = b.first.first, by = b.first.second;
-            int ca = abs(ax-BOARD_SIZE/2)+abs(ay-BOARD_SIZE/2);
-            int cb = abs(bx-BOARD_SIZE/2)+abs(by-BOARD_SIZE/2);
-            return ca < cb;
+    // 合并坐标并累加 priority
+    map<pair<int, int>, long long> prMap;
+    map<pair<int, int>, int> cntMap;
+    for (auto& t : threats) {
+        pair<int, int> k = make_pair(t.x, t.y);
+        prMap[k] += t.pr;
+        cntMap[k] += 1;
+    }
+    vector<pair<pair<int, int>, long long>> merged;
+    for (auto& p : prMap) {
+        long long score = p.second + cntMap[p.first] * 200000LL;
+        merged.push_back({ p.first, score });
+    }
+    sort(merged.begin(), merged.end(), [](const pair<pair<int, int>, long long>& a, const pair<pair<int, int>, long long>& b) {
+        return a.second > b.second;
         });
 
-        // 选择第一个可行的防守点并返回（最紧急）
-        auto chosen = merged.front().first;
-#if DEBUG_MODE==1
-        printf("DEBUG: must block at (%d,%d) with priority %d\n", chosen.first, chosen.second, merged.front().second); fflush(stdout);
-#endif
-        return {chosen.first, chosen.second};
+    // 双步威胁检测（仅对 top K 做二步模拟）
+    int topK = min((int)merged.size(), 8);
+    for (int i = 0; i < topK; ++i) {
+        int tx = merged[i].first.first, ty = merged[i].first.second;
+        update_board(tx, ty, enemy);
+        bool doubleStep = false;
+        for (int ax = max(0, tx - 2); ax <= min(BOARD_SIZE - 1, tx + 2) && !doubleStep; ++ax) {
+            for (int ay = max(0, ty - 2); ay <= min(BOARD_SIZE - 1, ty + 2); ++ay) {
+                if (!is_valid_pos(ax, ay)) continue;
+                update_board(ax, ay, enemy);
+                for (int d = 0; d < 4; ++d) {
+                    int s = detectStyle(ax, ay, dirs[d][0], dirs[d][1], enemy);
+                    if (s >= 6) { doubleStep = true; break; }
+                }
+                update_board(ax, ay, EMPTY);
+                if (doubleStep) break;
+            }
+        }
+        update_board(tx, ty, EMPTY);
+        if (doubleStep) merged[i].second += 15000000LL;
     }
 
-    // 2) 没有立即威胁，生成候选集合（邻域1或2），并把能延伸己方活三/阻断敌方高威胁的点加大权重
-    vector<pair<LLS,pair<int,int>>> candidates;
-    for (int x=0; x<BOARD_SIZE; ++x) {
-        for (int y=0; y<BOARD_SIZE; ++y) {
-            if (!is_valid_pos(x,y) || !hasNeighbor(x,y,2)) continue;
-            LLS base = scorePosition(x,y,my_color);
-            LLS bonus = 0;
+    if (!merged.empty()) {
+        // resort
+        sort(merged.begin(), merged.end(), [](const pair<pair<int, int>, long long>& a, const pair<pair<int, int>, long long>& b) {
+            if (a.second != b.second) return a.second > b.second;
+            int ax = a.first.first, ay = a.first.second, bx = b.first.first, by = b.first.second;
+            int ca = abs(ax - BOARD_SIZE / 2) + abs(ay - BOARD_SIZE / 2);
+            int cb = abs(bx - BOARD_SIZE / 2) + abs(by - BOARD_SIZE / 2);
+            return ca < cb;
+            });
+        return merged.front().first;
+    }
 
-            // 若我方下此点可生成/延伸活三或冲四 -> 鼓励
-            for (int d=0; d<4; ++d) {
-                int sMine = detectStyle(x,y,dirs[d][0],dirs[d][1], my_color);
-                if (sMine >= 4) bonus += 2500000LL;
-                if (sMine == 6) bonus += 5000000LL; // 活四更鼓励
-            }
-            // 若此点能阻断敌方在此点落子会造成高威胁，给极大bonus（确保进入候选）
-            for (int d=0; d<4; ++d) {
-                int sEnemy = detectStyle(x,y,dirs[d][0],dirs[d][1], enemy);
-                if (sEnemy >= 5) bonus += 15000000LL;
-                if (sEnemy == 4) bonus += 5000000LL; // 敌方活三也要防
-            }
-            // 轻微边界惩罚，偏好中心
-            int borderPenalty = 0;
-            if (x < 2 || y < 2 || x >= BOARD_SIZE-2 || y >= BOARD_SIZE-2) borderPenalty = 2000;
+    // 2) 无必防：生成候选（邻域扩大到2，中心奖励，己方/敌方合成评分）
+    vector<pair<LLS, pair<int, int>>> candidates;
+    for (int x = 0; x < BOARD_SIZE; ++x) for (int y = 0; y < BOARD_SIZE; ++y) {
+        if (!is_valid_pos(x, y) || !hasNeighbor(x, y, 3)) continue; // 扩展到3收集更多威胁点
+        LLS base = scorePosition(x, y, my_color); // 你的 scorePosition 已替换
+        LLS bonus = 0;
+        for (int d = 0; d < 4; ++d) {
+            int dx = dirs[d][0], dy = dirs[d][1];
+            int s1 = detectStyle(x, y, dx, dy, my_color);
+            int s2 = detectStyle(x, y, -dx, -dy, my_color);
+            int sMineCombined = s1 + s2;
+            if (sMineCombined >= 8) bonus += 6000000LL;
+            else if (sMineCombined >= 6) bonus += 2500000LL;
 
-            candidates.emplace_back(base + bonus - borderPenalty, make_pair(x,y));
+            int e1 = detectStyle(x, y, dx, dy, enemy);
+            int e2 = detectStyle(x, y, -dx, -dy, enemy);
+            int sEnemyCombined = e1 + e2;
+            if (sEnemyCombined >= 10) bonus += 15000000LL;
+            else if (sEnemyCombined >= 8) bonus += 5000000LL;
         }
+        double cx = BOARD_SIZE / 2.0, cy = BOARD_SIZE / 2.0;
+        double dist = sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+        double maxd = sqrt(cx * cx + cy * cy);
+        LLS centerBonus = (LLS)((maxd - dist) / maxd * 12000.0);
+        if (centerBonus < 0) centerBonus = 0;
+        bonus += centerBonus;
+
+        candidates.emplace_back(base + bonus, make_pair(x, y));
     }
 
     if (candidates.empty()) {
-        // fallback
-        for (int x=0;x<BOARD_SIZE;++x) for (int y=0;y<BOARD_SIZE;++y) if (is_valid_pos(x,y)) return {x,y};
-        return {-1,-1};
+        for (int x = 0; x < BOARD_SIZE; ++x) for (int y = 0; y < BOARD_SIZE; ++y) if (is_valid_pos(x, y)) return { x,y };
+        return { -1,-1 };
     }
 
-    sort(candidates.begin(), candidates.end(), [](const pair<LLS,pair<int,int>>& a, const pair<LLS,pair<int,int>>& b){
+    sort(candidates.begin(), candidates.end(), [](const pair<LLS, pair<int, int>>& a, const pair<LLS, pair<int, int>>& b) {
         return a.first > b.first;
-    });
+        });
+    if (candidates.size() > 8) candidates.resize(8);
 
-    // keep more candidates than before to avoid pruning掉防守点
-    int maxCandidates = min((int)candidates.size(), 12);
-    candidates.resize(maxCandidates);
-
-    // 3) 对候选进行 alphaBeta 搜索（negamax 风格）
-    int bestX=-1, bestY=-1;
-    LLS bestScore = LLONG_MIN/4;
-    int searchDepth = 5; // 你可调整为 4/5/6 视耗时而定
-
-    for (auto &cm : candidates) {
-        int x = cm.second.first, y = cm.second.second;
-        update_board(x,y,my_color);
-        bool win = (scorePosition(x,y,my_color) >= SCORE_FIVE);
-        LLS val;
-        if (win) val = (LLS)1e17;
-        else val = -alphaBeta(searchDepth-1, -1e18, 1e18);
-        update_board(x,y,EMPTY);
-
-        if (val > bestScore) {
-            bestScore = val;
-            bestX = x; bestY = y;
-        }
+    // 顶层搜索 depth=7
+    int bestX = -1, bestY = -1;
+    LLS bestScore = LLONG_MIN / 4;
+    int searchDepth = 7;
+    for (size_t i = 0; i < candidates.size(); ++i) {
+        int x = candidates[i].second.first, y = candidates[i].second.second;
+        update_board(x, y, my_color);
+        bool win = (scorePosition(x, y, my_color) >= SCORE_FIVE);
+        LLS val = win ? (LLS)1e17 : -alphaBeta(searchDepth - 1, -1e18, 1e18);
+        update_board(x, y, EMPTY);
+        if (val > bestScore) { bestScore = val; bestX = x; bestY = y; }
     }
 
-#if DEBUG_MODE==1
-    printf("DEBUG: chosen (%d,%d) by search score=%lld\n", bestX, bestY, bestScore); fflush(stdout);
-#endif
-
-    if (bestX != -1) return {bestX,bestY};
-    // fallback
-    for (int x=0;x<BOARD_SIZE;++x) for (int y=0;y<BOARD_SIZE;++y) if (is_valid_pos(x,y)) return {x,y};
-    return {-1,-1};
+    if (bestX != -1) return { bestX,bestY };
+    for (int x = 0; x < BOARD_SIZE; ++x) for (int y = 0; y < BOARD_SIZE; ++y) if (is_valid_pos(x, y)) return { x,y };
+    return { -1,-1 };
 }
-
-
 
 // 处理START命令
 void handle_start(int color) {
