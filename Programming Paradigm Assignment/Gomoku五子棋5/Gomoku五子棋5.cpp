@@ -1,4 +1,4 @@
-#ifdef _MSC_VER
+ï»¿#ifdef _MSC_VER
 #define strdup _strdup
 #endif
 #define _CRT_SECURE_NO_WARNINGS
@@ -15,7 +15,7 @@ typedef unsigned __int64 ull;
 typedef unsigned long long ull;
 #endif
 
-/* ³£Á¿¶¨Òå */
+/* å¸¸é‡å®šä¹‰ */
 enum { BOARD_DIMENSION = 12 };
 enum { INVALID_POSITION = -1 };
 enum { MAX_MOVES = BOARD_DIMENSION * BOARD_DIMENSION };
@@ -35,14 +35,14 @@ enum {
     BLOCKED_TWO_SCORE = 10,
     LIVE_ONE_SCORE = 10,
     BLOCKED_ONE_SCORE = 1,
-    SEARCH_DEPTH_LEVEL = 3
+    SEARCH_DEPTH_LEVEL = 4
 };
 
-/* Ã¶¾Ù */
+/* æšä¸¾ */
 typedef enum { EmptyPosition = 0, BlackPiece = 1, WhitePiece = 2 } PieceStatus;
 typedef enum { OPENING_PHASE, MIDGAME_PHASE, ENDGAME_PHASE } GamePhase;
 
-/* ½á¹¹Ìå */
+/* ç»“æ„ä½“ */
 typedef struct {
     int x;
     int y;
@@ -59,13 +59,13 @@ typedef struct {
     int positionScore;
 } HashTableEntry;
 
-/* ¿ª¾Ö¿âÌõÄ¿£¨key ´æÎª C ×Ö·û´® "x1,y1,x2,y2,..."£© */
+/* å¼€å±€åº“æ¡ç›®ï¼ˆkey å­˜ä¸º C å­—ç¬¦ä¸² "x1,y1,x2,y2,..."ï¼‰ */
 typedef struct {
-    char* key;            /* ¶¯Ì¬·ÖÅäµÄ×Ö·û´® */
+    char* key;            /* åŠ¨æ€åˆ†é…çš„å­—ç¬¦ä¸² */
     OpeningMove move;
 } OpeningEntry;
 
-/* È«¾ÖÓÎÏ·×´Ì¬£¨´úÌæ C++ Àà³ÉÔ±£© */
+/* å…¨å±€æ¸¸æˆçŠ¶æ€ï¼ˆä»£æ›¿ C++ ç±»æˆå‘˜ï¼‰ */
 static PieceStatus gameBoard[BOARD_DIMENSION][BOARD_DIMENSION];
 static PieceStatus ourPieceColor = EmptyPosition;
 static PieceStatus opponentPieceColor = EmptyPosition;
@@ -77,12 +77,12 @@ static int moveCounter = 0;
 typedef struct { int x, y; PieceStatus flag; } MoveHistoryRecord;
 static MoveHistoryRecord moveHistory[MAX_MOVES];
 
-/* ¿ª¾Ö¿â£¨¼òµ¥Êı×é£© */
+/* å¼€å±€åº“ï¼ˆç®€å•æ•°ç»„ï¼‰ */
 static OpeningEntry* openingBook = NULL;
 static int openingBookSize = 0;
 static int openingBookCapacity = 0;
 
-/* ÖÃ»»±í£º²ÉÓÃ¿ªµØÖ·ÏßĞÔÌ½²â£¨¹Ì¶¨´óĞ¡£© */
+/* ç½®æ¢è¡¨ï¼šé‡‡ç”¨å¼€åœ°å€çº¿æ€§æ¢æµ‹ï¼ˆå›ºå®šå¤§å°ï¼‰ */
 #define TRANSPOSITION_TABLE_SIZE (1 << 16) /* 65536 */
 static ull tt_keys[TRANSPOSITION_TABLE_SIZE];
 static int tt_depth[TRANSPOSITION_TABLE_SIZE];
@@ -98,7 +98,7 @@ static char* my_strdup(const char* s) {
     }
     return res;
 }
-/* Ëæ»úÊıÉú³É£¨xorshift64*£©ÓÃÓÚ Zobrist */
+/* éšæœºæ•°ç”Ÿæˆï¼ˆxorshift64*ï¼‰ç”¨äº Zobrist */
 static ull rng_state;
 static ull rng_next64(void) {
     /* xorshift64* */
@@ -110,7 +110,7 @@ static ull rng_next64(void) {
     return x * (ull)2685821657736338717ULL;
 }
 
-/* ¹¤¾ß£ºÈ·±£¿ª¾Ö¿âÈİÁ¿ */
+/* å·¥å…·ï¼šç¡®ä¿å¼€å±€åº“å®¹é‡ */
 static void openingBookEnsureCapacity(int need) {
     if (openingBookCapacity >= need) return;
     int newcap = openingBookCapacity ? openingBookCapacity * 2 : 128;
@@ -119,18 +119,18 @@ static void openingBookEnsureCapacity(int need) {
     openingBookCapacity = newcap;
 }
 
-/* ²åÈë¿ª¾Ö¿â */
+/* æ’å…¥å¼€å±€åº“ */
 static void openingBookAddRaw(const char* key, int x, int y) {
     openingBookEnsureCapacity(openingBookSize + 1);
-    openingBook[openingBookSize].key = my_strdup(key);  // Ê¹ÓÃ×Ô¶¨Òåº¯Êı
+    openingBook[openingBookSize].key = my_strdup(key);  // ä½¿ç”¨è‡ªå®šä¹‰å‡½æ•°
     openingBook[openingBookSize].move.x = x;
     openingBook[openingBookSize].move.y = y;
     openingBookSize++;
 }
 
-/* Éú³É¶Ô³Æ key£¨symmetry 0..5£©Óë²åÈë */
+/* ç”Ÿæˆå¯¹ç§° keyï¼ˆsymmetry 0..5ï¼‰ä¸æ’å…¥ */
 static void generate_symmetric_and_add(const char* key, int symmetry, int add_x, int add_y) {
-    /* ½âÎö key into array of ints */
+    /* è§£æ key into array of ints */
     int coords[256];
     int coords_len = 0;
     char tmp[1024];
@@ -163,19 +163,19 @@ static void generate_symmetric_and_add(const char* key, int symmetry, int add_x,
     openingBookAddRaw(buf, add_x, add_y);
 }
 
-/* Ìí¼Ó¿ª¾Ö£¬²¢×Ô¶¯Ìí¼Ó¶àÖÖ¶Ô³ÆĞÎÊ½ */
+/* æ·»åŠ å¼€å±€ï¼Œå¹¶è‡ªåŠ¨æ·»åŠ å¤šç§å¯¹ç§°å½¢å¼ */
 static void addOpeningWithSymmetries(const char* key, int movex, int movey) {
-    /* Ô­ĞÍ */
+    /* åŸå‹ */
     openingBookAddRaw(key, movex, movey);
-    /* ÎåÖÖ¶Ô³Æ */
+    /* äº”ç§å¯¹ç§° */
     for (int t = 1; t <= 5; ++t) {
         generate_symmetric_and_add(key, t, movex, movey);
     }
 }
 
-/* ³õÊ¼»¯¿ª¾Ö¿â£¨½«Ô­ C++ ÖĞ list µÄÄÚÈİÖğÏî¼ÓÈë£© */
+/* åˆå§‹åŒ–å¼€å±€åº“ï¼ˆå°†åŸ C++ ä¸­ list çš„å†…å®¹é€é¡¹åŠ å…¥ï¼‰ */
 static void initOpeningBook(void) {
-    /* ÏÈÊÍ·Å¾ÉÊı¾İ£¨Èç¹ûÓĞ£© */
+    /* å…ˆé‡Šæ”¾æ—§æ•°æ®ï¼ˆå¦‚æœæœ‰ï¼‰ */
     for (int i = 0; i < openingBookSize; ++i) {
         free(openingBook[i].key);
     }
@@ -184,7 +184,7 @@ static void initOpeningBook(void) {
     openingBookSize = 0;
     openingBookCapacity = 0;
 
-    /* Ìí¼ÓÌõÄ¿£¨¾¡Á¿¸´¿ÌÔ­ cpp µÄÌõÄ¿£© */
+    /* æ·»åŠ æ¡ç›®ï¼ˆå°½é‡å¤åˆ»åŸ cpp çš„æ¡ç›®ï¼‰ */
     addOpeningWithSymmetries("5,5,6,5,7,5", 8, 5);
     addOpeningWithSymmetries("5,5,6,5,7,6", 8, 6);
     addOpeningWithSymmetries("5,5,6,5,7,4", 8, 4);
@@ -199,7 +199,7 @@ static void initOpeningBook(void) {
     addOpeningWithSymmetries("5,5,6,5,5,3", 4, 2);
     addOpeningWithSymmetries("5,5,6,5,4,7", 2, 7);
 
-    /* Ğ±Ö¸ÀàµÈ£¨ÕªÂ¼Ô­ cpp£© */
+    /* æ–œæŒ‡ç±»ç­‰ï¼ˆæ‘˜å½•åŸ cppï¼‰ */
     addOpeningWithSymmetries("5,5,6,6,7,7", 4, 6);
     addOpeningWithSymmetries("5,5,6,6,7,6", 8, 5);
     addOpeningWithSymmetries("5,5,6,6,7,5", 7, 8);
@@ -214,7 +214,7 @@ static void initOpeningBook(void) {
     addOpeningWithSymmetries("5,5,6,6,4,6", 3, 7);
     addOpeningWithSymmetries("5,5,6,6,4,4", 3, 3);
 
-    /* À©Õ¹ AI ×Ô¶¨Òå¿ª¾Ö¿â£¨Ô­ÎÄ£© */
+    /* æ‰©å±• AI è‡ªå®šä¹‰å¼€å±€åº“ï¼ˆåŸæ–‡ï¼‰ */
     addOpeningWithSymmetries("5,5,6,6,6,5,5,6", 7, 7);
     addOpeningWithSymmetries("6,6,7,7,7,6,6,7", 8, 8);
     addOpeningWithSymmetries("5,5,6,6,5,6,6,7", 7, 7);
@@ -227,7 +227,7 @@ static void initOpeningBook(void) {
     addOpeningWithSymmetries("6,6,8,8,7,7", 7, 6);
 }
 
-/* ÖÃ»»±í²Ù×÷£¨ÏßĞÔÌ½²â£© */
+/* ç½®æ¢è¡¨æ“ä½œï¼ˆçº¿æ€§æ¢æµ‹ï¼‰ */
 static void tt_clear(void) {
     for (int i = 0; i < TRANSPOSITION_TABLE_SIZE; ++i) {
         tt_keys[i] = 0ULL;
@@ -236,7 +236,7 @@ static void tt_clear(void) {
     }
 }
 static int tt_index_for_key(ull key) {
-    /* Ê¹ÓÃ¼òµ¥ÑÚÂë */
+    /* ä½¿ç”¨ç®€å•æ©ç  */
     return (int)(key & (TRANSPOSITION_TABLE_SIZE - 1));
 }
 static int tt_get(ull key, int depth, int* out_score) {
@@ -267,18 +267,18 @@ static void tt_put(ull key, int depth, int score) {
     }
 }
 
-/* ¸¨Öú£º¼ì²é×ø±êºÏ·¨ */
+/* è¾…åŠ©ï¼šæ£€æŸ¥åæ ‡åˆæ³• */
 static inline int isWithinBoardBounds(int x, int y) {
     return (x >= 0 && x < BOARD_DIMENSION && y >= 0 && y < BOARD_DIMENSION);
 }
 
-/* ¸üĞÂ Zobrist ¹şÏ££¨ÇĞ»»Î»ÖÃ old->new£© */
+/* æ›´æ–° Zobrist å“ˆå¸Œï¼ˆåˆ‡æ¢ä½ç½® old->newï¼‰ */
 static inline void updateZobrist(int x, int y, PieceStatus oldp, PieceStatus newp) {
     currentZobrist ^= zobrist[x][y][oldp];
     currentZobrist ^= zobrist[x][y][newp];
 }
 
-/* ÆåĞÍÆÀ¹À¸¨Öú£¨¶ÔÓ¦ C++ evaluatePositionState£© */
+/* æ£‹å‹è¯„ä¼°è¾…åŠ©ï¼ˆå¯¹åº” C++ evaluatePositionStateï¼‰ */
 static int evaluatePositionState(const int pieceCount, const int blockCount, const int emptyCount) {
     if (emptyCount <= 0) {
         if (pieceCount >= 5) return FIVE_IN_A_LINE_SCORE;
@@ -395,13 +395,13 @@ static int evaluatePositionState(const int pieceCount, const int blockCount, con
     return 0;
 }
 
-/* evaluateSinglePoint ¡ª¡ª ÆÀ¹ÀÄ³Ò»µã£¨Óë C++ °æ±¾¶ÔÓ¦£© */
+/* evaluateSinglePoint â€”â€” è¯„ä¼°æŸä¸€ç‚¹ï¼ˆä¸ C++ ç‰ˆæœ¬å¯¹åº”ï¼‰ */
 static int evaluateSinglePoint(int x, int y, PieceStatus pieceFlag) {
     int totalScore = 0;
     int consecutiveCount, blockCount, emptyPositionCount;
-    /* ºáÏò */
+    /* æ¨ªå‘ */
     consecutiveCount = 1; blockCount = 0; emptyPositionCount = -1;
-    /* ÏòÓÒ */
+    /* å‘å³ */
     for (int i = y + 1; ; ++i) {
         if (i >= BOARD_DIMENSION) { blockCount++; break; }
         if (gameBoard[x][i] == EmptyPosition) {
@@ -415,7 +415,7 @@ static int evaluateSinglePoint(int x, int y, PieceStatus pieceFlag) {
         }
         else { blockCount++; break; }
     }
-    /* Ïò×ó */
+    /* å‘å·¦ */
     for (int i = y - 1; ; --i) {
         if (i < 0) { blockCount++; break; }
         if (gameBoard[x][i] == EmptyPosition) {
@@ -433,7 +433,7 @@ static int evaluateSinglePoint(int x, int y, PieceStatus pieceFlag) {
     }
     totalScore += evaluatePositionState(consecutiveCount, blockCount, emptyPositionCount);
 
-    /* ×İÏò */
+    /* çºµå‘ */
     consecutiveCount = 1; blockCount = 0; emptyPositionCount = -1;
     for (int i = x + 1; ; ++i) {
         if (i >= BOARD_DIMENSION) { blockCount++; break; }
@@ -465,7 +465,7 @@ static int evaluateSinglePoint(int x, int y, PieceStatus pieceFlag) {
     }
     totalScore += evaluatePositionState(consecutiveCount, blockCount, emptyPositionCount);
 
-    /* Ö÷¶Ô½ÇÏß \ */
+    /* ä¸»å¯¹è§’çº¿ \ */
     consecutiveCount = 1; blockCount = 0; emptyPositionCount = -1;
     for (int i = 1; ; ++i) {
         int cx = x + i, cy = y + i;
@@ -499,7 +499,7 @@ static int evaluateSinglePoint(int x, int y, PieceStatus pieceFlag) {
     }
     totalScore += evaluatePositionState(consecutiveCount, blockCount, emptyPositionCount);
 
-    /* ¸±¶Ô½ÇÏß / */
+    /* å‰¯å¯¹è§’çº¿ / */
     consecutiveCount = 1; blockCount = 0; emptyPositionCount = -1;
     for (int i = 1; ; ++i) {
         int cx = x + i, cy = y - i;
@@ -564,9 +564,9 @@ static void updatePositionScores(int x, int y) {
     }
 }
 
-/* makeChessMove: Âä×Ó£¨pieceFlag==EmptyPosition ±íÊ¾³·×Ó£© */
+/* makeChessMove: è½å­ï¼ˆpieceFlag==EmptyPosition è¡¨ç¤ºæ’¤å­ï¼‰ */
 static void makeChessMove(int x, int y, PieceStatus pieceFlag) {
-    /* ¸üĞÂ zobrist */
+    /* æ›´æ–° zobrist */
     updateZobrist(x, y, gameBoard[x][y], pieceFlag);
     gameBoard[x][y] = pieceFlag;
     updateZobrist(x, y, EmptyPosition, EmptyPosition); /* no-op to keep same pattern (safe) */
@@ -580,14 +580,14 @@ static void makeChessMove(int x, int y, PieceStatus pieceFlag) {
         }
     }
     else {
-        /* ³·×Ó£ºÔÚ±¾ÊµÏÖÖĞ£¬³·×Ó²Ù×÷²»ĞŞ¸Ä moveHistory µÄ¼ÇÂ¼£¨negamax ÓÃ: makeChessMove(i,j) ³·Ïú£©
-           ÎªÁË³·Ïú£¬ÎÒÃÇĞèÒª½«¶ÔÓ¦Î»ÖÃÖØÖÃÎª¿Õ²¢ moveCounter--£¨Ö»ÔÚ negamax µÄ³·ÏúÂ·¾¶Ê¹ÓÃ£©
+        /* æ’¤å­ï¼šåœ¨æœ¬å®ç°ä¸­ï¼Œæ’¤å­æ“ä½œä¸ä¿®æ”¹ moveHistory çš„è®°å½•ï¼ˆnegamax ç”¨: makeChessMove(i,j) æ’¤é”€ï¼‰
+           ä¸ºäº†æ’¤é”€ï¼Œæˆ‘ä»¬éœ€è¦å°†å¯¹åº”ä½ç½®é‡ç½®ä¸ºç©ºå¹¶ moveCounter--ï¼ˆåªåœ¨ negamax çš„æ’¤é”€è·¯å¾„ä½¿ç”¨ï¼‰
         */
-        /* Êµ¼ÊÉÏÉÏ²ã´úÂëµ÷ÓÃ³·ÏúÊ±»á¹ÜÀí moveCounter£¬ÎÒÃÇÌá¹©¼òµ¥²Ù×÷£¨ÉÏ²ã±£Ö¤ÕıÈ·µ÷ÓÃË³Ğò£© */
+        /* å®é™…ä¸Šä¸Šå±‚ä»£ç è°ƒç”¨æ’¤é”€æ—¶ä¼šç®¡ç† moveCounterï¼Œæˆ‘ä»¬æä¾›ç®€å•æ“ä½œï¼ˆä¸Šå±‚ä¿è¯æ­£ç¡®è°ƒç”¨é¡ºåºï¼‰ */
     }
 }
 
-/* findEmptyPositionToPlace£ºÕÒµ½µÚÒ»¸ö¿ÕÎ»×÷Îªºó±¸Âä×Ó */
+/* findEmptyPositionToPlaceï¼šæ‰¾åˆ°ç¬¬ä¸€ä¸ªç©ºä½ä½œä¸ºåå¤‡è½å­ */
 static void findEmptyPositionToPlace(PieceStatus pf, int* bestX, int* bestY) {
     for (int i = 0; i < BOARD_DIMENSION; ++i)
         for (int j = 0; j < BOARD_DIMENSION; ++j)
@@ -614,7 +614,7 @@ static int checkForFiveInARow(int x, int y, PieceStatus pf) {
     return 0;
 }
 
-/* checkLinePattern (¶ÔÓ¦ C++ µÄ checkLinePattern) */
+/* checkLinePattern (å¯¹åº” C++ çš„ checkLinePattern) */
 static int checkLinePattern(int x, int y, PieceStatus pf, int targetCount, int targetEmpty) {
     for (int dir = 4; dir < 8; ++dir) {
         int consecutive = 1, emptyCount = 0;
@@ -637,50 +637,89 @@ static int checkLinePattern(int x, int y, PieceStatus pf, int targetCount, int t
     return 0;
 }
 
-/* generateCandidateMoves: Ìî³ä moves Êı×é²¢·µ»Ø movesLen£¨×î¶à±£ÁôÇ° 6£© */
+/* generateCandidateMoves: å¡«å…… moves æ•°ç»„å¹¶è¿”å› movesLenï¼ˆæœ€å¤šä¿ç•™å‰ 6ï¼‰ */
 static int cmpChessMoveDesc(const void* a, const void* b) {
     const ChessMove* A = (const ChessMove*)a;
     const ChessMove* B = (const ChessMove*)b;
-    return (B->score - A->score); /* ½µĞò */
+    return (B->score - A->score); /* é™åº */
 }
 static void generateCandidateMoves(ChessMove* moves, int* movesLen, PieceStatus pf) {
     int len = 0;
+    int minX = BOARD_DIMENSION, minY = BOARD_DIMENSION, maxX = -1, maxY = -1;
+    // åªè®¡ç®—æœ‰å­åŒºåŸŸçš„è¾¹ç•Œï¼ˆç¼©å°æœç´¢èŒƒå›´ï¼‰
     for (int i = 0; i < BOARD_DIMENSION; ++i) {
         for (int j = 0; j < BOARD_DIMENSION; ++j) {
-            if (gameBoard[i][j] == EmptyPosition) {
-                /* Ö»¿¼ÂÇÖÜÎ§ÓĞ×ÓµÄÎ»ÖÃ */
-                int found = 0;
-                for (int dx = -1; dx <= 1 && !found; ++dx)
-                    for (int dy = -1; dy <= 1 && !found; ++dy) {
-                        if (dx == 0 && dy == 0) continue;
-                        int nx = i + dx, ny = j + dy;
-                        if (isWithinBoardBounds(nx, ny) && gameBoard[nx][ny] != EmptyPosition) found = 1;
-                    }
-                if (!found) continue;
-                moves[len].x = i; moves[len].y = j;
-                moves[len].score = evaluateSinglePoint(i, j, pf);
-                len++;
+            if (gameBoard[i][j] != EmptyPosition) {
+                if (i < minX) minX = i;
+                if (i > maxX) maxX = i;
+                if (j < minY) minY = j;
+                if (j > maxY) maxY = j;
             }
         }
     }
+    if (minX == BOARD_DIMENSION) { // ç©ºæ£‹ç›˜
+        *movesLen = 1;
+        moves[0].x = moves[0].y = BOARD_DIMENSION / 2;
+        moves[0].score = 0;
+        return;
+    }
+    // é™åˆ¶åœ¨å‘¨è¾¹ 2 æ ¼èŒƒå›´
+    minX = (minX > 2 ? minX - 2 : 0);
+    minY = (minY > 2 ? minY - 2 : 0);
+    maxX = (maxX < BOARD_DIMENSION - 3 ? maxX + 2 : BOARD_DIMENSION - 1);
+    maxY = (maxY < BOARD_DIMENSION - 3 ? maxY + 2 : BOARD_DIMENSION - 1);
+
+    for (int i = minX; i <= maxX; ++i) {
+        for (int j = minY; j <= maxY; ++j) {
+            if (gameBoard[i][j] == EmptyPosition) {
+                int found = 0;
+                for (int dx = -2; dx <= 2 && !found; ++dx)
+                    for (int dy = -2; dy <= 2 && !found; ++dy) {
+                        if (dx == 0 && dy == 0) continue;
+                        int nx = i + dx, ny = j + dy;
+                        if (isWithinBoardBounds(nx, ny) && gameBoard[nx][ny] != EmptyPosition)
+                            found = 1;
+                    }
+                if (!found) continue;
+                moves[len].x = i;
+                moves[len].y = j;
+                moves[len].score = evaluateSinglePoint(i, j, pf);
+                len++;
+                if (len >= 64) goto SKIP_EXTRA; // é™åˆ¶å€™é€‰æ•°é‡
+            }
+        }
+    }
+SKIP_EXTRA:
     if (len > 1) qsort(moves, len, sizeof(ChessMove), cmpChessMoveDesc);
-    if (len > 6) len = 6;
+    if (len > 10) len = 10; // ä»6â†’10èƒ½æå‡å¼ºåº¦ï¼Œä»£ä»·ä½
     *movesLen = len;
 }
+
 
 /* evaluateOverallBoard */
 static int evaluateOverallBoard(void) {
     int val = 0;
-    for (int i = 0; i < BOARD_DIMENSION; ++i)
+    int ourMax = 0, oppMax = 0;
+    for (int i = 0; i < BOARD_DIMENSION; ++i) {
         for (int j = 0; j < BOARD_DIMENSION; ++j) {
-            if (gameBoard[i][j] == ourPieceColor) val += ourPieceScores[i][j];
-            else if (gameBoard[i][j] == opponentPieceColor) val -= opponentPieceScores[i][j];
+            if (gameBoard[i][j] == ourPieceColor) {
+                val += ourPieceScores[i][j];
+                if (ourPieceScores[i][j] > ourMax) ourMax = ourPieceScores[i][j];
+            }
+            else if (gameBoard[i][j] == opponentPieceColor) {
+                val -= opponentPieceScores[i][j];
+                if (opponentPieceScores[i][j] > oppMax) oppMax = opponentPieceScores[i][j];
+            }
         }
+    }
+    // åŠ å¼ºæ”»å‡»å¯¼å‘ï¼ˆé è¿‘èƒœåˆ©æ—¶åŠ å€ï¼‰
+    val += (ourMax - oppMax) / 2;
     return val;
 }
 
+
 /* negamax with alpha-beta pruning
-   ×¢Òâ£ºÎªÁË¼ò»¯³·×Ó£¬ÎÒÃÇÊÖ¶¯×öÂä×Ó/³·×Ó²¢Î¬»¤ moveCounter
+   æ³¨æ„ï¼šä¸ºäº†ç®€åŒ–æ’¤å­ï¼Œæˆ‘ä»¬æ‰‹åŠ¨åšè½å­/æ’¤å­å¹¶ç»´æŠ¤ moveCounter
 */
 static int negamaxWithAlphaBetaPruning(int depth, int alpha, int beta, PieceStatus pf, int* bestX, int* bestY, int isTopLevel) {
     int stored;
@@ -702,8 +741,8 @@ static int negamaxWithAlphaBetaPruning(int depth, int alpha, int beta, PieceStat
         int sx = INVALID_POSITION, sy = INVALID_POSITION;
         findEmptyPositionToPlace(pf, &sx, &sy);
         if (sx == INVALID_POSITION) return 0;
-        /* Ó¦¸Ã³¢ÊÔÕâÒ»×ß£¬µİ¹é */
-        /* Âä×Ó */
+        /* åº”è¯¥å°è¯•è¿™ä¸€èµ°ï¼Œé€’å½’ */
+        /* è½å­ */
         PieceStatus old = gameBoard[sx][sy];
         updateZobrist(sx, sy, old, pf);
         gameBoard[sx][sy] = pf;
@@ -712,7 +751,7 @@ static int negamaxWithAlphaBetaPruning(int depth, int alpha, int beta, PieceStat
 
         int val = -negamaxWithAlphaBetaPruning(depth - 1, -beta, -alpha, (pf == BlackPiece) ? WhitePiece : BlackPiece, bestX, bestY, 0);
 
-        /* ³·×Ó */
+        /* æ’¤å­ */
         moveCounter--;
         gameBoard[sx][sy] = old;
         updateZobrist(sx, sy, pf, old);
@@ -733,7 +772,7 @@ static int negamaxWithAlphaBetaPruning(int depth, int alpha, int beta, PieceStat
 
     for (int k = 0; k < movesLen; ++k) {
         int i = moves[k].x, j = moves[k].y;
-        /* Âä×Ó */
+        /* è½å­ */
         PieceStatus old = gameBoard[i][j];
         updateZobrist(i, j, old, pf);
         gameBoard[i][j] = pf;
@@ -742,7 +781,7 @@ static int negamaxWithAlphaBetaPruning(int depth, int alpha, int beta, PieceStat
 
         int val = -negamaxWithAlphaBetaPruning(depth - 1, -beta, -alpha, (pf == BlackPiece) ? WhitePiece : BlackPiece, bestX, bestY, 0);
 
-        /* ³·×Ó */
+        /* æ’¤å­ */
         moveCounter--;
         gameBoard[i][j] = old;
         updateZobrist(i, j, pf, old);
@@ -764,9 +803,9 @@ static int negamaxWithAlphaBetaPruning(int depth, int alpha, int beta, PieceStat
     return alpha;
 }
 
-/* attemptNextMove£º¼ì²é¿ª¾Ö¿â¡¢ÌØ¶¨²½ÊıÓÅÏÈ×ß·¨¡¢Ë«·½Ö±½Ó»òÍşĞ²ĞÔ×ß·¨ */
+/* attemptNextMoveï¼šæ£€æŸ¥å¼€å±€åº“ã€ç‰¹å®šæ­¥æ•°ä¼˜å…ˆèµ°æ³•ã€åŒæ–¹ç›´æ¥æˆ–å¨èƒæ€§èµ°æ³• */
 static int attemptNextMove(int* nextX, int* nextY, int* score) {
-    /* Éú³Éµ±Ç°ÀúÊ·ĞòÁĞ key */
+    /* ç”Ÿæˆå½“å‰å†å²åºåˆ— key */
     char seq[4096]; seq[0] = 0;
     for (int step = 0; step < moveCounter; ++step) {
         char t[32];
@@ -774,7 +813,7 @@ static int attemptNextMove(int* nextX, int* nextY, int* score) {
         sprintf(t, "%d,%d", moveHistory[step].x, moveHistory[step].y);
         strcat(seq, t);
     }
-    /* ²éÕÒ¿ª¾Ö¿â */
+    /* æŸ¥æ‰¾å¼€å±€åº“ */
     for (int i = 0; i < openingBookSize; ++i) {
         if (strcmp(openingBook[i].key, seq) == 0) {
             *nextX = openingBook[i].move.x;
@@ -782,7 +821,7 @@ static int attemptNextMove(int* nextX, int* nextY, int* score) {
             return 0; /* use opening book, no further search */
         }
     }
-    /* ÌØ¶¨²½ÊıÄ¬ÈÏ×ß·¨£¨ÓëÔ­ cpp ±£³ÖÒ»ÖÂ£© */
+    /* ç‰¹å®šæ­¥æ•°é»˜è®¤èµ°æ³•ï¼ˆä¸åŸ cpp ä¿æŒä¸€è‡´ï¼‰ */
     if (moveCounter == 4) {
         *nextX = 4; *nextY = 4; return 0;
     }
@@ -792,19 +831,19 @@ static int attemptNextMove(int* nextX, int* nextY, int* score) {
         if (gameBoard[4][4] == BlackPiece) { *nextX = 5; *nextY = 7; return 0; }
         if (gameBoard[7][7] == BlackPiece) { *nextX = 6; *nextY = 4; return 0; }
     }
-    /* ¼ì²éÎÒ·½Ö±½Ó»ñÊ¤£¨ÎåÁ¬£© */
+    /* æ£€æŸ¥æˆ‘æ–¹ç›´æ¥è·èƒœï¼ˆäº”è¿ï¼‰ */
     for (int i = 0; i < BOARD_DIMENSION; ++i)
         for (int j = 0; j < BOARD_DIMENSION; ++j)
             if (gameBoard[i][j] == EmptyPosition && checkForFiveInARow(i, j, ourPieceColor)) {
                 *nextX = i; *nextY = j; return 0;
             }
-    /* ¼ì²é¶ÔÊÖÖ±½Ó»ñÊ¤£¨Ğè×èÖ¹£© */
+    /* æ£€æŸ¥å¯¹æ‰‹ç›´æ¥è·èƒœï¼ˆéœ€é˜»æ­¢ï¼‰ */
     for (int i = 0; i < BOARD_DIMENSION; ++i)
         for (int j = 0; j < BOARD_DIMENSION; ++j)
             if (gameBoard[i][j] == EmptyPosition && checkForFiveInARow(i, j, opponentPieceColor)) {
                 *nextX = i; *nextY = j; return 0;
             }
-    /* ¼ì²éÎÒ·½ÓÅÊÆ£¨»îËÄ »ò ³åËÄ+»îÈı£© */
+    /* æ£€æŸ¥æˆ‘æ–¹ä¼˜åŠ¿ï¼ˆæ´»å›› æˆ– å†²å››+æ´»ä¸‰ï¼‰ */
     for (int i = 0; i < BOARD_DIMENSION; ++i)
         for (int j = 0; j < BOARD_DIMENSION; ++j)
             if (gameBoard[i][j] == EmptyPosition &&
@@ -812,7 +851,7 @@ static int attemptNextMove(int* nextX, int* nextY, int* score) {
                     (checkLinePattern(i, j, ourPieceColor, 4, 1) && checkLinePattern(i, j, ourPieceColor, 3, 2)))) {
                 *nextX = i; *nextY = j; return 0;
             }
-    /* ¼ì²é¶ÔÊÖÓÅÊÆ */
+    /* æ£€æŸ¥å¯¹æ‰‹ä¼˜åŠ¿ */
     for (int i = 0; i < BOARD_DIMENSION; ++i)
         for (int j = 0; j < BOARD_DIMENSION; ++j)
             if (gameBoard[i][j] == EmptyPosition &&
@@ -820,12 +859,12 @@ static int attemptNextMove(int* nextX, int* nextY, int* score) {
                     (checkLinePattern(i, j, opponentPieceColor, 4, 1) && checkLinePattern(i, j, opponentPieceColor, 3, 2)))) {
                 *nextX = i; *nextY = j; return 0;
             }
-    return 1; /* ĞèÒª½øÒ»²½ËÑË÷ */
+    return 1; /* éœ€è¦è¿›ä¸€æ­¥æœç´¢ */
 }
 
-/* ³õÊ¼»¯ Zobrist ±í¡¢ÆåÅÌ¡¢¿ª¾Ö¿â¡¢ÖÃ»»±í */
+/* åˆå§‹åŒ– Zobrist è¡¨ã€æ£‹ç›˜ã€å¼€å±€åº“ã€ç½®æ¢è¡¨ */
 static void initGame(void) {
-    /* ³õÊ¼»¯ RNG */
+    /* åˆå§‹åŒ– RNG */
     rng_state = (ull)time(NULL) | 1ULL;
     for (int i = 0; i < BOARD_DIMENSION; ++i)
         for (int j = 0; j < BOARD_DIMENSION; ++j)
@@ -833,7 +872,7 @@ static void initGame(void) {
                 zobrist[i][j][k] = rng_next64();
 
     currentZobrist = 0ULL;
-    /* Çå¿ÕÆåÅÌ */
+    /* æ¸…ç©ºæ£‹ç›˜ */
     for (int i = 0; i < BOARD_DIMENSION; ++i)
         for (int j = 0; j < BOARD_DIMENSION; ++j) {
             gameBoard[i][j] = EmptyPosition;
@@ -844,41 +883,41 @@ static void initGame(void) {
     tt_clear();
 }
 
-/* ´¦Àí START ÃüÁî */
+/* å¤„ç† START å‘½ä»¤ */
 static void handleStart(void) {
     int color;
     if (scanf("%d", &color) != 1) return;
     ourPieceColor = (PieceStatus)color;
     opponentPieceColor = (ourPieceColor == BlackPiece) ? WhitePiece : BlackPiece;
-    /* ³õÊ¼»¯ Zobrist¡¢¿ª¾Ö¿âµÈ */
+    /* åˆå§‹åŒ– Zobristã€å¼€å±€åº“ç­‰ */
     initGame();
-    /* Ô­ cpp ÔÚ START ÀïÏÂÁËÇ° 4 ²½Ä¬ÈÏÆå£¨5,5 °×; 6,6 °×; 5,6 ºÚ; 6,5 ºÚ£© */
-    /* ÔÚ C++ °æ±¾Ëüµ÷ÓÃ makeChessMove(5,5,WhitePiece) µÈ£¬ÎÒÃÇÔÚÕâÀï¸´¿Ì */
+    /* åŸ cpp åœ¨ START é‡Œä¸‹äº†å‰ 4 æ­¥é»˜è®¤æ£‹ï¼ˆ5,5 ç™½; 6,6 ç™½; 5,6 é»‘; 6,5 é»‘ï¼‰ */
+    /* åœ¨ C++ ç‰ˆæœ¬å®ƒè°ƒç”¨ makeChessMove(5,5,WhitePiece) ç­‰ï¼Œæˆ‘ä»¬åœ¨è¿™é‡Œå¤åˆ» */
     makeChessMove(5, 5, WhitePiece);
     makeChessMove(6, 6, WhitePiece);
     makeChessMove(5, 6, BlackPiece);
     makeChessMove(6, 5, BlackPiece);
-    /* moveCounter ÔÚ makeChessMove ÖĞÒÑµİÔö */
+    /* moveCounter åœ¨ makeChessMove ä¸­å·²é€’å¢ */
 
     printf("OK\n");
     fflush(stdout);
 }
 
-/* ´¦Àí PLACE x y£¨¶ÔÊÖÏÂ×Ó£© */
+/* å¤„ç† PLACE x yï¼ˆå¯¹æ‰‹ä¸‹å­ï¼‰ */
 static void handlePlace(int x, int y) {
     makeChessMove(x, y, opponentPieceColor);
-    /* moveCounter ÒÑÔÚ makeChessMove ÖĞµİÔö */
+    /* moveCounter å·²åœ¨ makeChessMove ä¸­é€’å¢ */
 }
 
-/* ´¦Àí TURN£¨ÂÖµ½ÎÒÏÂ£© */
+/* å¤„ç† TURNï¼ˆè½®åˆ°æˆ‘ä¸‹ï¼‰ */
 static void handleTurn(void) {
     int nextX = INVALID_POSITION, nextY = INVALID_POSITION;
     int score = 0;
     int needSearch = attemptNextMove(&nextX, &nextY, &score);
     if (needSearch) {
-        /* Ê¹ÓÃ negamax ËÑË÷ */
+        /* ä½¿ç”¨ negamax æœç´¢ */
         int bestX = INVALID_POSITION, bestY = INVALID_POSITION;
-        /* µ÷ÓÃÊ±´«Èë ourPieceColor */
+        /* è°ƒç”¨æ—¶ä¼ å…¥ ourPieceColor */
         negamaxWithAlphaBetaPruning(SEARCH_DEPTH_LEVEL, MIN_EVALUATION_SCORE, MAX_EVALUATION_SCORE, ourPieceColor, &bestX, &bestY, 1);
         if (bestX != INVALID_POSITION) {
             nextX = bestX; nextY = bestY;
@@ -892,13 +931,13 @@ static void handleTurn(void) {
     fflush(stdout);
 }
 
-/* ´¦Àí END */
+/* å¤„ç† END */
 static void handleEnd(int result) {
     fprintf(stderr, "Game ended. Result=%d\n", result);
     fflush(stderr);
 }
 
-/* Ö÷Ñ­»· run */
+/* ä¸»å¾ªç¯ run */
 static void run_loop(void) {
     char cmd[64];
     while (1) {
@@ -929,19 +968,19 @@ static void run_loop(void) {
 
 /* main */
 int main(void) {
-    /* ³õÊ¼ÖÖ×ÓºÍ»ù±¾³õÊ¼»¯£¨zobrist »áÔÚ START ÀïÔÙ´Î³õÊ¼»¯£© */
+    /* åˆå§‹ç§å­å’ŒåŸºæœ¬åˆå§‹åŒ–ï¼ˆzobrist ä¼šåœ¨ START é‡Œå†æ¬¡åˆå§‹åŒ–ï¼‰ */
     rng_state = (ull)time(NULL) | 1ULL;
-    /* ÇåÁãÆåÅÌÒÔ·ÀÍòÒ» */
+    /* æ¸…é›¶æ£‹ç›˜ä»¥é˜²ä¸‡ä¸€ */
     for (int i = 0; i < BOARD_DIMENSION; ++i)
         for (int j = 0; j < BOARD_DIMENSION; ++j)
             gameBoard[i][j] = EmptyPosition;
-    /* ³õÊ¼»¯ÖÃ»»±íºÍ¿ª¾Ö¿â */
-    initOpeningBook(); /* ÏÈ³õÊ¼»¯¿ª¾Ö¿â£¨ÀïÃæÒÀÀµ RNG »áÓÃµ½ rng_next64 ÈôÎ´³õÊ¼»¯ÔòÒ²¿ÉÔËĞĞ£© */
+    /* åˆå§‹åŒ–ç½®æ¢è¡¨å’Œå¼€å±€åº“ */
+    initOpeningBook(); /* å…ˆåˆå§‹åŒ–å¼€å±€åº“ï¼ˆé‡Œé¢ä¾èµ– RNG ä¼šç”¨åˆ° rng_next64 è‹¥æœªåˆå§‹åŒ–åˆ™ä¹Ÿå¯è¿è¡Œï¼‰ */
     tt_clear();
 
     run_loop();
 
-    /* ÊÍ·Å¿ª¾Ö¿âÄÚ´æ */
+    /* é‡Šæ”¾å¼€å±€åº“å†…å­˜ */
     for (int i = 0; i < openingBookSize; ++i) free(openingBook[i].key);
     free(openingBook);
     openingBook = NULL;
