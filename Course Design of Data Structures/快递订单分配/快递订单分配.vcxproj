@@ -18,11 +18,22 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DynamicOrderHeap.h" />
+    <ClInclude Include="order.h" />
+    <ClInclude Include="Utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="DynamicOrderHeap.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="order.cpp" />
+    <ClCompile Include="Utils.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{36132b29-b8b0-4ace-ae98-713748c776e1}</ProjectGuid>
-    <RootNamespace>Warshall求关系的自反对称和传递闭包</RootNamespace>
+    <ProjectGuid>{86357270-a41b-4339-8815-540db4140a9f}</ProjectGuid>
+    <RootNamespace>快递订单分配</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -122,9 +133,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="Warshall求关系的自反、对称和传递闭包.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -3,7 +3,7 @@
 #include <vector>
 #include <cctype>
 using namespace std;
-
+//-2×（3+5）+2^3/4=
 // 自定义栈类（替代标准库stack）
 template <typename T>
 class MyStack {
@@ -47,7 +47,7 @@ public:
 
 // 检查字符是否合法
 bool checkValidChar(char c) {
-    return isdigit(c) || c == '+' || c == '-' || c == '*' || c == '/' ||
+    return isdigit(static_cast<unsigned char>(c)) || c == '+' || c == '-' || c == '*' || c == '/' ||
         c == '(' || c == ')' || c == ' ' || c == '^' || c == '%' ||
         c == '×' || c == '=';
 }
@@ -186,9 +186,10 @@ vector<string> infixToRPN(const string& expr) {
         }
         else if (c == '*' || c == '/' || c == '%' || c == '^') {
             string op(1, c);
+            // 乘方是右结合，优先级高于其他乘除，条件改为 > 而非 >=
             while (!opsStack.empty() && opsStack.top() != "(" &&
                 ((op != "^" && getPrecedence(opsStack.top()) >= getPrecedence(op)) ||
-                    (op == "^" && getPrecedence(opsStack.top()) > getPrecedence(op)))) {
+                    (op == "^" && getPrecedence(opsStack.top()) > getPrecedence(op)))) { // 这里是 >，确保右结合
                 rpn.push_back(opsStack.top());
                 opsStack.pop();
             }
