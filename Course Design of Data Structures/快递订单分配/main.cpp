@@ -50,6 +50,5 @@ int main() {
     catch (const exception& e) {
         cerr << "Òì³£: " << e.what() << endl;
     }
-
     return 0;
 }
