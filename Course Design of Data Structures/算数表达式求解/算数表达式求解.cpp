@@ -3,7 +3,9 @@
 #include <vector>
 #include <cctype>
 using namespace std;
-//-2×（3+5）+2^3/4=
+//-2*(3+5)+2^3/4=
+// 应当为-14
+// 此外不支持乘号×即类似x的形状
 // 自定义栈类（替代标准库stack）
 template <typename T>
 class MyStack {
@@ -18,13 +20,15 @@ public:
     ~MyStack() {
         delete[] data;  // 释放动态内存
     }
+    // 修复MyStack的push方法，防止溢出和无效读取
     void push(const T& val) {
         if (topIndex + 1 >= capacity) {
-            capacity *= 2;
-            T* newData = new T[capacity];
+            int newCapacity = capacity * 2;
+            T* newData = new T[newCapacity];
             for (int i = 0; i <= topIndex; ++i) newData[i] = data[i];
             delete[] data;
             data = newData;
+            capacity = newCapacity; // 修正：扩容后更新capacity
         }
         data[++topIndex] = val;
     }
