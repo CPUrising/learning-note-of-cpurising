@@ -7,6 +7,7 @@ using namespace std;
 // 应当为-14
 // 此外不支持乘号×即类似x的形状
 // 自定义栈类（替代标准库stack）
+
 template <typename T>
 class MyStack {
 private:
@@ -20,7 +21,6 @@ public:
     ~MyStack() {
         delete[] data;  // 释放动态内存
     }
-    // 修复MyStack的push方法，防止溢出和无效读取
     void push(const T& val) {
         if (topIndex + 1 >= capacity) {
             int newCapacity = capacity * 2;
@@ -52,19 +52,25 @@ public:
 // 检查字符是否合法
 bool checkValidChar(char c) {
     return isdigit(static_cast<unsigned char>(c)) || c == '+' || c == '-' || c == '*' || c == '/' ||
-        c == '(' || c == ')' || c == ' ' || c == '^' || c == '%' ||
-        c == '×' || c == '=';
+        c == '{' || c == '}' || c == '[' || c == ']' || c == '(' || c == ')' || c == ' ' || c == '^' || 
+        c == '%' || c == '×' || c == '=';
 }
 
 // 括号匹配检查（使用自定义栈）
 bool checkBrackets(const string& s) {
     MyStack<char> st;
-    for (char c : s) {
-        if (c == '(') st.push(c);
-        else if (c == ')') {
-            if (st.empty() || st.top() != '(') return false;
-            st.pop();
-        }
+    for (char c : s)
+    {
+        if (c == '(' || c == '[' || c == '{')
+            st.push(c);
+        else if (c == ')' || c == ']' || c == '}')
+            if (st.empty())
+                return false;
+            else if (c == ')' && st.top() == '('
+                || c == ']' && st.top() == '['
+                || c == '}' && st.top() == '{')
+                st.pop();
+            else return false;
     }
     return st.empty();
 }
@@ -92,7 +98,7 @@ string preprocess(string expr) {
     string res;
     for (char c : expr) {
         if (c == ' ') continue;
-        if (c == '×') res += '*';
+        //if (c == '×') res += '*';暂时不支持乘号×
         else if (c == '=') break;
         else res += c;
     }
@@ -110,7 +116,7 @@ bool isNum(const string& ch) {
     return true;
 }
 
-// 判断是否为双目运算符
+// 判断是否为双目运算符，但是存疑
 bool isArithmetic(const string& ch) {
     return ch == "+" || ch == "-" || ch == "*" || ch == "/" || ch == "^" || ch == "%";
 }
@@ -126,11 +132,15 @@ int magicMath(int value1, int value2, const string& op) {
     if (op == "-") return value2 - value1;
     if (op == "*") return value2 * value1;
     if (op == "/") {
-        if (value1 == 0) { cerr << "错误：除数不能为0" << endl; exit(1); }
+		if (value1 == 0) {
+            throw runtime_error("错误：除数不能为0"); // 抛出异常
+        }
         return value2 / value1;
     }
     if (op == "%") {
-        if (value1 == 0) { cerr << "错误：取余除数不能为0" << endl; exit(1); }
+        if (value1 == 0) {
+            throw runtime_error("错误：取余除数不能为0"); // 抛出异常
+        }
         return value2 % value1;
     }
     if (op == "^") {
@@ -141,7 +151,7 @@ int magicMath(int value1, int value2, const string& op) {
     return 0;
 }
 
-// 用数组存储运算符及优先级（替代unordered_map）
+// 用数组存储运算符及优先级（替代unordered_map）//当然我希望unordered_map
 const string ops[] = { "+", "-", "*", "/", "%", "^" };
 const int precs[] = { 1, 1, 2, 2, 2, 3 };
 int getPrecedence(const string& op) {
@@ -161,27 +171,41 @@ vector<string> infixToRPN(const string& expr) {
         if (isdigit(c)) {
             size_t j = i;
             while (j < expr.size() && isdigit(expr[j])) j++;
-            rpn.push_back(expr.substr(i, j - i));
+            rpn.push_back(expr.substr(i, j - i));// 提取完整数字
             i = j - 1;
         }
-        else if (c == '(') {
-            opsStack.push("(");
+        // 左括号处理（支持'(', '[', '{'）
+        else if (c == '(' || c == '[' || c == '{') {
+            opsStack.push(string(1, c));  // 左括号直接入栈
         }
-        else if (c == ')') {
-            while (!opsStack.empty() && opsStack.top() != "(") {
-                rpn.push_back(opsStack.top());
-                opsStack.pop();
+        // 右括号处理（支持')', ']', '}'）
+        else if (c == ')' || c == ']' || c == '}') {
+            // 循环弹出栈顶元素，直到找到对应的左括号（因语法已验证，必能找到）
+            while (true) {
+                string topOp = opsStack.top();
+                // 判断是否为对应的左括号
+                if ((c == ')' && topOp == "(") ||
+                    (c == ']' && topOp == "[") ||
+                    (c == '}' && topOp == "{")) {
+                    opsStack.pop();  // 弹出左括号（不加入RPN）
+                    break;
+                }
+                else {
+                    // 弹出运算符并加入RPN
+                    rpn.push_back(topOp);
+                    opsStack.pop();
+                }
             }
-            opsStack.pop();
         }
+        // 处理一元运算符,把一元+改为#，一元-改为$
         else if (c == '+' || c == '-') {
-            bool isUnary = (i == 0) || (expr[i - 1] == '(') || (isArithmetic(string(1, expr[i - 1])));
+            bool isUnary = (i == 0) || (expr[i - 1] == '(') || (expr[i - 1] == '[') || (expr[i - 1] == '{') || (isArithmetic(string(1, expr[i - 1])));
             if (isUnary) {
                 opsStack.push(c == '+' ? "#" : "$");
             }
             else {
                 string op(1, c);
-                while (!opsStack.empty() && opsStack.top() != "(" && getPrecedence(opsStack.top()) >= getPrecedence(op)) {
+                while (!opsStack.empty() && opsStack.top() != "(" && opsStack.top() != "[" && opsStack.top() != "{" ) {
                     rpn.push_back(opsStack.top());
                     opsStack.pop();
                 }
@@ -191,7 +215,7 @@ vector<string> infixToRPN(const string& expr) {
         else if (c == '*' || c == '/' || c == '%' || c == '^') {
             string op(1, c);
             // 乘方是右结合，优先级高于其他乘除，条件改为 > 而非 >=
-            while (!opsStack.empty() && opsStack.top() != "(" &&
+            while (!opsStack.empty() && opsStack.top() != "(" && opsStack.top() != "[" && opsStack.top() != "{" &&
                 ((op != "^" && getPrecedence(opsStack.top()) >= getPrecedence(op)) ||
                     (op == "^" && getPrecedence(opsStack.top()) > getPrecedence(op)))) { // 这里是 >，确保右结合
                 rpn.push_back(opsStack.top());
@@ -208,7 +232,7 @@ vector<string> infixToRPN(const string& expr) {
     return rpn;
 }
 
-// 计算逆波兰表达式（使用自定义栈）
+// 计算逆波兰表达式
 int evalRPN(const vector<string>& tokens) {
     MyStack<int> numStack;
     for (const string& token : tokens) {
@@ -279,6 +303,9 @@ int main() {
 
         try {
             cout << "计算结果：" << calculate(expr) << endl;
+        }
+        catch (const runtime_error& e) { // 捕获具体异常
+            cerr << e.what() << endl; // 输出错误信息
         }
         catch (...) {
             cerr << "计算错误" << endl;
