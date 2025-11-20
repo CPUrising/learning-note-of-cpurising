@@ -37,18 +37,15 @@ private:
 
     // 辅助函数：递归二分查找
     TreeNode* searchRecursive(TreeNode* node, int target) {
-        // 递归终止条件：节点为空（未找到）或找到目标值
         if (node == nullptr || node->val == target) {
             return node;
         }
-        // 二分缩小范围：目标值小，搜左子树
-        if (target < node->val) {
-            return searchRecursive(node->left, target);
+        else if(node->val>target)
+        {
+			searchRecursive(node->left, target);
         }
-        // 目标值大，搜右子树
-        else {
-            return searchRecursive(node->right, target);
-        }
+        else
+            searchRecursive(node->right, target);
     }
 
     // 辅助函数：中序遍历（BST中序遍历结果为升序，用于验证）
@@ -83,20 +80,15 @@ public:
 
     // 迭代版二分查找（推荐，无栈溢出风险）
     TreeNode* searchIterative(int target) {
-        TreeNode* current = root;
-        // 循环缩小范围：直到节点为空或找到目标
-        while (current != nullptr && current->val != target) {
-            // 二分核心：左小右大
-            if (target < current->val) {
-                current = current->left;
-            }
-            else {
+		TreeNode* current = root;
+        while (current != nullptr&&current->val!=target) {
+            if (current->val < target)
                 current = current->right;
-            }
+            else
+                current = current->left;
         }
-        return current; // 找到返回节点，未找到返回nullptr
+        return current;
     }
-
     // 递归版二分查找（对外接口）
     TreeNode* searchRecursive(int target) {
         return searchRecursive(root, target);

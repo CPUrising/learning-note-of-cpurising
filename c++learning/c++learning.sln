@@ -21,6 +21,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "priority_queue", "priority_
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "YANGVI 杨辉三角的队列解法", "YANGVI 杨辉三角的队列解法\YANGVI 杨辉三角的队列解法.vcxproj", "{67B0A5FB-7572-40B6-8FF9-6ADC83822F16}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "二分搜索_递归", "二分搜索_递归\二分搜索_递归.vcxproj", "{DF9A1AB8-DBB8-483B-AD65-EA62F18824EA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -101,6 +103,14 @@ Global
 		{67B0A5FB-7572-40B6-8FF9-6ADC83822F16}.Release|x64.Build.0 = Release|x64
 		{67B0A5FB-7572-40B6-8FF9-6ADC83822F16}.Release|x86.ActiveCfg = Release|Win32
 		{67B0A5FB-7572-40B6-8FF9-6ADC83822F16}.Release|x86.Build.0 = Release|Win32
+		{DF9A1AB8-DBB8-483B-AD65-EA62F18824EA}.Debug|x64.ActiveCfg = Debug|x64
+		{DF9A1AB8-DBB8-483B-AD65-EA62F18824EA}.Debug|x64.Build.0 = Debug|x64
+		{DF9A1AB8-DBB8-483B-AD65-EA62F18824EA}.Debug|x86.ActiveCfg = Debug|Win32
+		{DF9A1AB8-DBB8-483B-AD65-EA62F18824EA}.Debug|x86.Build.0 = Debug|Win32
+		{DF9A1AB8-DBB8-483B-AD65-EA62F18824EA}.Release|x64.ActiveCfg = Release|x64
+		{DF9A1AB8-DBB8-483B-AD65-EA62F18824EA}.Release|x64.Build.0 = Release|x64
+		{DF9A1AB8-DBB8-483B-AD65-EA62F18824EA}.Release|x86.ActiveCfg = Release|Win32
+		{DF9A1AB8-DBB8-483B-AD65-EA62F18824EA}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
