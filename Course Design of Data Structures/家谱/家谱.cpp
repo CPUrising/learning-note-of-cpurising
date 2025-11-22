@@ -7,25 +7,38 @@
 
 using namespace std;
 
-// 家族成员类（多叉树节点）
+// 家族成员类（多叉树节点，添加唯一ID）
 class FamilyMember {
 public:
-    string name;                  // 成员姓名
-    vector<FamilyMember*> children; // 子女列表（子节点）
+    int id;                       // 唯一标识ID
+    string name;                  // 成员姓名（允许重复）
+    vector<FamilyMember*> children; // 子女列表
 
-    FamilyMember(const string& n) : name(n) {}
+    FamilyMember(int id, const string& n) : id(id), name(n) {}
 };
 
-// 家谱管理类（无map依赖）
+// 家谱管理类（支持重复姓名）
 class Genealogy {
 private:
-    FamilyMember* root;                  // 家谱根节点（祖先）
-    vector<FamilyMember*> allMembers;    // 存储所有成员（替代map，用于查找）
+    FamilyMember* root;                  // 家谱根节点
+    vector<FamilyMember*> allMembers;    // 存储所有成员
+    int nextId = 1;                      // ID计数器（确保唯一性）
 
-    // 线性查找成员（返回节点指针，找不到返回nullptr）
-    FamilyMember* findMember(const string& name) {
+    // 查找所有同名成员
+    vector<FamilyMember*> findAllMembers(const string& name) {
+        vector<FamilyMember*> result;
         for (FamilyMember* member : allMembers) {
             if (member->name == name) {
+                result.push_back(member);
+            }
+        }
+        return result;
+    }
+
+    // 通过ID查找成员
+    FamilyMember* findMemberById(int id) {
+        for (FamilyMember* member : allMembers) {
+            if (member->id == id) {
                 return member;
             }
         }
@@ -35,83 +48,72 @@ private:
 public:
     Genealogy() : root(nullptr) {}
 
-    // 1. 初始化家谱（建立祖先）
+    // 初始化家谱（建立祖先）
     void init(const string& ancestorName) {
-        root = new FamilyMember(ancestorName);
-        allMembers.push_back(root);  // 添加到全局列表
-        cout << "此家谱的祖先是：" << ancestorName << endl;
+        root = new FamilyMember(nextId++, ancestorName);
+        allMembers.push_back(root);
+        cout << "此家谱的祖先是：" << ancestorName << "（ID：" << root->id << "）" << endl;
     }
 
-    // 2. 完善家庭（为成员添加多个子女）
-    bool completeFamily(const string& parentName, const vector<string>& childNames) {
-        FamilyMember* parent = findMember(parentName);
+    // 完善家庭（添加多个子女）
+    bool completeFamily(int parentId, const vector<string>& childNames) {
+        FamilyMember* parent = findMemberById(parentId);
         if (parent == nullptr) {
-            cout << "错误：未找到成员" << parentName << endl;
+            cout << "错误：未找到ID对应的成员" << endl;
             return false;
         }
         for (const string& childName : childNames) {
-            // 检查是否已存在（线性查找）
-            if (findMember(childName) != nullptr) {
-                cout << "警告：成员" << childName << "已存在" << endl;
-                continue;
-            }
-            FamilyMember* child = new FamilyMember(childName);
+            FamilyMember* child = new FamilyMember(nextId++, childName);
             parent->children.push_back(child);
-            allMembers.push_back(child);  // 添加到全局列表
+            allMembers.push_back(child);
         }
-        // 输出结果
-        cout << parentName << "的第一子代子孙是：";
+        // 输出结果（包含ID）
+        cout << parent->name << "（ID：" << parent->id << "）的第一子代子孙是：";
         for (size_t i = 0; i < parent->children.size(); ++i) {
             if (i > 0) cout << " ";
-            cout << parent->children[i]->name;
+            cout << parent->children[i]->name << "（ID：" << parent->children[i]->id << "）";
         }
         cout << endl;
         return true;
     }
 
-    // 3. 添加家庭成员（为成员添加单个子女）
-    bool addMember(const string& parentName, const string& childName) {
-        FamilyMember* parent = findMember(parentName);
+    // 添加单个家庭成员
+    bool addMember(int parentId, const string& childName) {
+        FamilyMember* parent = findMemberById(parentId);
         if (parent == nullptr) {
-            cout << "错误：未找到成员" << parentName << endl;
+            cout << "错误：未找到ID对应的成员" << endl;
             return false;
         }
-        if (findMember(childName) != nullptr) {
-            cout << "警告：成员" << childName << "已存在" << endl;
-            return false;
-        }
-        FamilyMember* child = new FamilyMember(childName);
+        FamilyMember* child = new FamilyMember(nextId++, childName);
         parent->children.push_back(child);
-        allMembers.push_back(child);  // 添加到全局列表
-        cout << parentName << "的第一子代子孙是：";
+        allMembers.push_back(child);
+        cout << parent->name << "（ID：" << parent->id << "）的第一子代子孙是：";
         for (size_t i = 0; i < parent->children.size(); ++i) {
             if (i > 0) cout << " ";
-            cout << parent->children[i]->name;
+            cout << parent->children[i]->name << "（ID：" << parent->children[i]->id << "）";
         }
         cout << endl;
         return true;
     }
 
-    // 4. 解散家庭（删除成员的所有子女）
-    bool dissolveFamily(const string& parentName) {
-        FamilyMember* parent = findMember(parentName);
+    // 解散家庭（删除所有子女）
+    bool dissolveFamily(int parentId) {
+        FamilyMember* parent = findMemberById(parentId);
         if (parent == nullptr) {
-            cout << "错误：未找到成员" << parentName << endl;
+            cout << "错误：未找到ID对应的成员" << endl;
             return false;
         }
-        // 输出要解散的子女
-        cout << parentName << "要解散家庭的人是：";
+        cout << parent->name << "（ID：" << parent->id << "）要解散家庭的人是：";
         for (size_t i = 0; i < parent->children.size(); ++i) {
             if (i > 0) cout << " ";
-            cout << parent->children[i]->name;
-            // 从全局列表中移除
+            cout << parent->children[i]->name << "（ID：" << parent->children[i]->id << "）";
+            // 从全局列表移除
             for (auto it = allMembers.begin(); it != allMembers.end(); ++it) {
                 if (*it == parent->children[i]) {
                     allMembers.erase(it);
                     break;
                 }
             }
-            // 释放内存
             delete parent->children[i];
         }
         cout << endl;
@@ -119,29 +121,25 @@ public:
         return true;
     }
 
-    // 5. 更改成员姓名
-    bool renameMember(const string& oldName, const string& newName) {
-        FamilyMember* member = findMember(oldName);
+    // 更改成员姓名（无需检查重名）
+    bool renameMember(int memberId, const string& newName) {
+        FamilyMember* member = findMemberById(memberId);
         if (member == nullptr) {
-            cout << "错误：未找到成员" << oldName << endl;
+            cout << "错误：未找到ID对应的成员" << endl;
             return false;
         }
-        // 检查新姓名是否已存在
-        if (findMember(newName) != nullptr) {
-            cout << "警告：姓名" << newName << "已被使用" << endl;
-            return false;
-        }
+        string oldName = member->name;
         member->name = newName;
-        cout << oldName << "已更名为" << newName << endl;
+        cout << oldName << "（ID：" << member->id << "）已更名为" << newName << endl;
         return true;
     }
 
-    // 新增：检查成员是否存在（给输入检查函数调用）
-    bool isMemberExists(const string& name) {
-        return findMember(name) != nullptr;
+    // 获取同名成员列表（供输入检查使用）
+    vector<FamilyMember*> getMembersByName(const string& name) {
+        return findAllMembers(name);
     }
 
-    // 析构函数：释放所有节点内存
+    // 析构函数
     ~Genealogy() {
         for (FamilyMember* member : allMembers) {
             delete member;
@@ -157,7 +155,7 @@ void clearInputBuffer() {
     cin.ignore(1000, '\n');
 }
 
-// 输入检查：正整数（1-20，用于儿女人数）
+// 输入检查：正整数（1-20）
 void inputNum(int& len) {
     while (1) {
         cin >> len;
@@ -172,15 +170,29 @@ void inputNum(int& len) {
     }
 }
 
-// 修改：仅检查姓名非空
-bool checkNameFormat(const string& name) {
-    return !name.empty(); // 只要非空字符串即可
+// 输入检查：ID（正整数）
+void inputId(int& id) {
+    while (1) {
+        cin >> id;
+        if (!cin.good() || id < 1) {
+            clearInputBuffer();
+            cout << "输入错误！请重新输入正整数ID：";
+        }
+        else {
+            clearInputBuffer();
+            break;
+        }
+    }
 }
 
-// 输入检查：姓名格式（仅检查非空）
+// 检查姓名非空
+bool checkNameFormat(const string& name) {
+    return !name.empty();
+}
+
+// 输入姓名（允许重复）
 void inputName(string& name) {
     while (1) {
-        // 使用getline读取整行，允许包含空格
         getline(cin, name);
         if (!cin.good() || !checkNameFormat(name)) {
             clearInputBuffer();
@@ -192,33 +204,36 @@ void inputName(string& name) {
     }
 }
 
-// 输入检查：已存在的成员姓名（用于父成员、要改名的成员）
-void inputExistingName(string& name, Genealogy& genealogy) {
+// 输入成员姓名并选择具体ID（处理重名）
+int inputMemberId(Genealogy& genealogy) {
+    string name;
     while (1) {
+        cout << "请输入成员姓名：";
         inputName(name);
-        if (genealogy.isMemberExists(name)) {
-            break;
+        vector<FamilyMember*> members = genealogy.getMembersByName(name);
+        if (members.empty()) {
+            cout << "错误：该姓名的成员不存在，请重新输入" << endl;
+            continue;
         }
-        else {
-            cout << "错误：该成员不存在，请重新输入：";
+        // 显示所有同名成员
+        cout << "找到以下同名成员，请选择ID：" << endl;
+        for (FamilyMember* m : members) {
+            cout << m->name << "（ID：" << m->id << "）" << endl;
         }
+        // 输入并验证ID
+        int id;
+        cout << "请输入目标成员的ID：";
+        inputId(id);
+        for (FamilyMember* m : members) {
+            if (m->id == id) {
+                return id; // 找到匹配的ID
+            }
+        }
+        cout << "错误：输入的ID与该姓名不匹配，请重新选择" << endl;
     }
 }
 
-// 输入检查：不存在的成员姓名（用于新增子女、改名后的姓名）
-void inputNewName(string& name, Genealogy& genealogy) {
-    while (1) {
-        inputName(name);
-        if (!genealogy.isMemberExists(name)) {
-            break;
-        }
-        else {
-            cout << "错误：该姓名已存在，请重新输入：";
-        }
-    }
-}
-
-// 输入检查：操作选项（A-E）
+// 输入操作选项（A-E）
 void inputChoice(char& choice) {
     while (1) {
         cin >> choice;
@@ -233,12 +248,11 @@ void inputChoice(char& choice) {
         }
     }
 }
-// -------------------------- 输入检查函数结束 --------------------------
 
-// 主函数：交互界面
+// 主函数
 int main() {
-    cout << "** 家谱管理系统 **" << endl;
-    cout << "** 请选择要执行的操作： **" << endl;
+    cout << "** 家谱管理系统（支持重复姓名）**" << endl;
+    cout << "** 操作说明：所有成员通过唯一ID标识，姓名可重复 **" << endl;
     cout << "** A ---- 完善家谱 **" << endl;
     cout << "** B ---- 添加家庭成员 **" << endl;
     cout << "** C ---- 解散局部家庭 **" << endl;
@@ -250,50 +264,43 @@ int main() {
     string ancestorName;
     cout << "首先建立一个家谱！" << endl;
     cout << "请输入祖先的姓名：";
-   
-    inputNewName(ancestorName, genealogy); // 祖先姓名需是新的（不存在）
+    inputName(ancestorName); // 祖先姓名无需检查唯一性
     genealogy.init(ancestorName);
 
     char choice;
     while (true) {
         cout << "\n请选择要执行的操作：";
-        inputChoice(choice); // 检查操作选项合法性
+        inputChoice(choice);
 
         if (choice == 'A') {
-            string parentName;
+            int parentId = inputMemberId(genealogy);
             int childCount;
-            cout << "请输入要建立家庭的人的姓名：";
-            inputExistingName(parentName, genealogy); // 父成员必须存在
-            cout << "请输入" << parentName << "的儿女人数：";
-            inputNum(childCount); // 检查儿女人数合法性
-            cout << "请依次输入" << parentName << "的儿女的姓名：";
+            cout << "请输入该成员的儿女人数：";
+            inputNum(childCount);
+            cout << "请依次输入儿女的姓名（可重复）：";
             vector<string> childNames(childCount);
             for (int i = 0; i < childCount; ++i) {
-                inputNewName(childNames[i], genealogy); // 子女姓名必须不存在
+                inputName(childNames[i]); // 无需检查重名
             }
-            genealogy.completeFamily(parentName, childNames);
+            genealogy.completeFamily(parentId, childNames);
         }
         else if (choice == 'B') {
-            string parentName, childName;
-            cout << "请输入要添加儿子（或女儿）的人的姓名：";
-            inputExistingName(parentName, genealogy); // 父成员必须存在
-            cout << "请输入" << parentName << "新添加的儿子（或女儿）的姓名：";
-            inputNewName(childName, genealogy); // 子女姓名必须不存在
-            genealogy.addMember(parentName, childName);
+            int parentId = inputMemberId(genealogy);
+            string childName;
+            cout << "请输入新添加的儿子（或女儿）的姓名：";
+            inputName(childName); // 无需检查重名
+            genealogy.addMember(parentId, childName);
         }
         else if (choice == 'C') {
-            string parentName;
-            cout << "请输入要解散家庭的人的姓名：";
-            inputExistingName(parentName, genealogy); // 父成员必须存在
-            genealogy.dissolveFamily(parentName);
+            int parentId = inputMemberId(genealogy);
+            genealogy.dissolveFamily(parentId);
         }
         else if (choice == 'D') {
-            string oldName, newName;
-            cout << "请输入要更改姓名的人的目前姓名：";
-            inputExistingName(oldName, genealogy); // 原成员必须存在
+            int memberId = inputMemberId(genealogy);
+            string newName;
             cout << "请输入更改后的姓名：";
-            inputNewName(newName, genealogy); // 新姓名必须不存在
-            genealogy.renameMember(oldName, newName);
+            inputName(newName); // 无需检查重名
+            genealogy.renameMember(memberId, newName);
         }
         else if (choice == 'E') {
             cout << "程序已退出" << endl;
