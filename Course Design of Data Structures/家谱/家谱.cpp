@@ -1,24 +1,28 @@
+ï»¿#include <windows.h>
 #include <iostream>
 #include <vector>
 #include <string>
+#include <limits>
+#include <cctype>
+
 using namespace std;
 
-// ¼Ò×å³ÉÔ±Àà£¨¶à²æÊ÷½Úµã£©
+// å®¶æ—æˆå‘˜ç±»ï¼ˆå¤šå‰æ ‘èŠ‚ç‚¹ï¼‰
 class FamilyMember {
 public:
-    string name;                  // ³ÉÔ±ĞÕÃû
-    vector<FamilyMember*> children; // ×ÓÅ®ÁĞ±í£¨×Ó½Úµã£©
+    string name;                  // æˆå‘˜å§“å
+    vector<FamilyMember*> children; // å­å¥³åˆ—è¡¨ï¼ˆå­èŠ‚ç‚¹ï¼‰
 
     FamilyMember(const string& n) : name(n) {}
 };
 
-// ¼ÒÆ×¹ÜÀíÀà£¨ÎŞmapÒÀÀµ£©
+// å®¶è°±ç®¡ç†ç±»ï¼ˆæ— mapä¾èµ–ï¼‰
 class Genealogy {
 private:
-    FamilyMember* root;                  // ¼ÒÆ×¸ù½Úµã£¨×æÏÈ£©
-    vector<FamilyMember*> allMembers;    // ´æ´¢ËùÓĞ³ÉÔ±£¨Ìæ´úmap£¬ÓÃÓÚ²éÕÒ£©
+    FamilyMember* root;                  // å®¶è°±æ ¹èŠ‚ç‚¹ï¼ˆç¥–å…ˆï¼‰
+    vector<FamilyMember*> allMembers;    // å­˜å‚¨æ‰€æœ‰æˆå‘˜ï¼ˆæ›¿ä»£mapï¼Œç”¨äºæŸ¥æ‰¾ï¼‰
 
-    // ÏßĞÔ²éÕÒ³ÉÔ±£¨·µ»Ø½ÚµãÖ¸Õë£¬ÕÒ²»µ½·µ»Ønullptr£©
+    // çº¿æ€§æŸ¥æ‰¾æˆå‘˜ï¼ˆè¿”å›èŠ‚ç‚¹æŒ‡é’ˆï¼Œæ‰¾ä¸åˆ°è¿”å›nullptrï¼‰
     FamilyMember* findMember(const string& name) {
         for (FamilyMember* member : allMembers) {
             if (member->name == name) {
@@ -31,32 +35,32 @@ private:
 public:
     Genealogy() : root(nullptr) {}
 
-    // 1. ³õÊ¼»¯¼ÒÆ×£¨½¨Á¢×æÏÈ£©
+    // 1. åˆå§‹åŒ–å®¶è°±ï¼ˆå»ºç«‹ç¥–å…ˆï¼‰
     void init(const string& ancestorName) {
         root = new FamilyMember(ancestorName);
-        allMembers.push_back(root);  // Ìí¼Óµ½È«¾ÖÁĞ±í
-        cout << "´Ë¼ÒÆ×µÄ×æÏÈÊÇ£º" << ancestorName << endl;
+        allMembers.push_back(root);  // æ·»åŠ åˆ°å…¨å±€åˆ—è¡¨
+        cout << "æ­¤å®¶è°±çš„ç¥–å…ˆæ˜¯ï¼š" << ancestorName << endl;
     }
 
-    // 2. ÍêÉÆ¼ÒÍ¥£¨Îª³ÉÔ±Ìí¼Ó¶à¸ö×ÓÅ®£©
+    // 2. å®Œå–„å®¶åº­ï¼ˆä¸ºæˆå‘˜æ·»åŠ å¤šä¸ªå­å¥³ï¼‰
     bool completeFamily(const string& parentName, const vector<string>& childNames) {
         FamilyMember* parent = findMember(parentName);
         if (parent == nullptr) {
-            cout << "´íÎó£ºÎ´ÕÒµ½³ÉÔ±" << parentName << endl;
+            cout << "é”™è¯¯ï¼šæœªæ‰¾åˆ°æˆå‘˜" << parentName << endl;
             return false;
         }
         for (const string& childName : childNames) {
-            // ¼ì²éÊÇ·ñÒÑ´æÔÚ£¨ÏßĞÔ²éÕÒ£©
+            // æ£€æŸ¥æ˜¯å¦å·²å­˜åœ¨ï¼ˆçº¿æ€§æŸ¥æ‰¾ï¼‰
             if (findMember(childName) != nullptr) {
-                cout << "¾¯¸æ£º³ÉÔ±" << childName << "ÒÑ´æÔÚ" << endl;
+                cout << "è­¦å‘Šï¼šæˆå‘˜" << childName << "å·²å­˜åœ¨" << endl;
                 continue;
             }
             FamilyMember* child = new FamilyMember(childName);
             parent->children.push_back(child);
-            allMembers.push_back(child);  // Ìí¼Óµ½È«¾ÖÁĞ±í
+            allMembers.push_back(child);  // æ·»åŠ åˆ°å…¨å±€åˆ—è¡¨
         }
-        // Êä³ö½á¹û
-        cout << parentName << "µÄµÚÒ»×Ó´ú×ÓËïÊÇ£º";
+        // è¾“å‡ºç»“æœ
+        cout << parentName << "çš„ç¬¬ä¸€å­ä»£å­å­™æ˜¯ï¼š";
         for (size_t i = 0; i < parent->children.size(); ++i) {
             if (i > 0) cout << " ";
             cout << parent->children[i]->name;
@@ -65,21 +69,21 @@ public:
         return true;
     }
 
-    // 3. Ìí¼Ó¼ÒÍ¥³ÉÔ±£¨Îª³ÉÔ±Ìí¼Óµ¥¸ö×ÓÅ®£©
+    // 3. æ·»åŠ å®¶åº­æˆå‘˜ï¼ˆä¸ºæˆå‘˜æ·»åŠ å•ä¸ªå­å¥³ï¼‰
     bool addMember(const string& parentName, const string& childName) {
         FamilyMember* parent = findMember(parentName);
         if (parent == nullptr) {
-            cout << "´íÎó£ºÎ´ÕÒµ½³ÉÔ±" << parentName << endl;
+            cout << "é”™è¯¯ï¼šæœªæ‰¾åˆ°æˆå‘˜" << parentName << endl;
             return false;
         }
         if (findMember(childName) != nullptr) {
-            cout << "¾¯¸æ£º³ÉÔ±" << childName << "ÒÑ´æÔÚ" << endl;
+            cout << "è­¦å‘Šï¼šæˆå‘˜" << childName << "å·²å­˜åœ¨" << endl;
             return false;
         }
         FamilyMember* child = new FamilyMember(childName);
         parent->children.push_back(child);
-        allMembers.push_back(child);  // Ìí¼Óµ½È«¾ÖÁĞ±í
-        cout << parentName << "µÄµÚÒ»×Ó´ú×ÓËïÊÇ£º";
+        allMembers.push_back(child);  // æ·»åŠ åˆ°å…¨å±€åˆ—è¡¨
+        cout << parentName << "çš„ç¬¬ä¸€å­ä»£å­å­™æ˜¯ï¼š";
         for (size_t i = 0; i < parent->children.size(); ++i) {
             if (i > 0) cout << " ";
             cout << parent->children[i]->name;
@@ -88,26 +92,26 @@ public:
         return true;
     }
 
-    // 4. ½âÉ¢¼ÒÍ¥£¨É¾³ı³ÉÔ±µÄËùÓĞ×ÓÅ®£©
+    // 4. è§£æ•£å®¶åº­ï¼ˆåˆ é™¤æˆå‘˜çš„æ‰€æœ‰å­å¥³ï¼‰
     bool dissolveFamily(const string& parentName) {
         FamilyMember* parent = findMember(parentName);
         if (parent == nullptr) {
-            cout << "´íÎó£ºÎ´ÕÒµ½³ÉÔ±" << parentName << endl;
+            cout << "é”™è¯¯ï¼šæœªæ‰¾åˆ°æˆå‘˜" << parentName << endl;
             return false;
         }
-        // Êä³öÒª½âÉ¢µÄ×ÓÅ®
-        cout << parentName << "Òª½âÉ¢¼ÒÍ¥µÄÈËÊÇ£º";
+        // è¾“å‡ºè¦è§£æ•£çš„å­å¥³
+        cout << parentName << "è¦è§£æ•£å®¶åº­çš„äººæ˜¯ï¼š";
         for (size_t i = 0; i < parent->children.size(); ++i) {
             if (i > 0) cout << " ";
             cout << parent->children[i]->name;
-            // ´ÓÈ«¾ÖÁĞ±íÖĞÒÆ³ı
+            // ä»å…¨å±€åˆ—è¡¨ä¸­ç§»é™¤
             for (auto it = allMembers.begin(); it != allMembers.end(); ++it) {
                 if (*it == parent->children[i]) {
                     allMembers.erase(it);
                     break;
                 }
             }
-            // ÊÍ·ÅÄÚ´æ
+            // é‡Šæ”¾å†…å­˜
             delete parent->children[i];
         }
         cout << endl;
@@ -115,24 +119,29 @@ public:
         return true;
     }
 
-    // 5. ¸ü¸Ä³ÉÔ±ĞÕÃû
+    // 5. æ›´æ”¹æˆå‘˜å§“å
     bool renameMember(const string& oldName, const string& newName) {
         FamilyMember* member = findMember(oldName);
         if (member == nullptr) {
-            cout << "´íÎó£ºÎ´ÕÒµ½³ÉÔ±" << oldName << endl;
+            cout << "é”™è¯¯ï¼šæœªæ‰¾åˆ°æˆå‘˜" << oldName << endl;
             return false;
         }
-        // ¼ì²éĞÂĞÕÃûÊÇ·ñÒÑ´æÔÚ
+        // æ£€æŸ¥æ–°å§“åæ˜¯å¦å·²å­˜åœ¨
         if (findMember(newName) != nullptr) {
-            cout << "¾¯¸æ£ºĞÕÃû" << newName << "ÒÑ±»Ê¹ÓÃ" << endl;
+            cout << "è­¦å‘Šï¼šå§“å" << newName << "å·²è¢«ä½¿ç”¨" << endl;
             return false;
         }
         member->name = newName;
-        cout << oldName << "ÒÑ¸üÃûÎª" << newName << endl;
+        cout << oldName << "å·²æ›´åä¸º" << newName << endl;
         return true;
     }
 
-    // Îö¹¹º¯Êı£ºÊÍ·ÅËùÓĞ½ÚµãÄÚ´æ
+    // æ–°å¢ï¼šæ£€æŸ¥æˆå‘˜æ˜¯å¦å­˜åœ¨ï¼ˆç»™è¾“å…¥æ£€æŸ¥å‡½æ•°è°ƒç”¨ï¼‰
+    bool isMemberExists(const string& name) {
+        return findMember(name) != nullptr;
+    }
+
+    // ææ„å‡½æ•°ï¼šé‡Šæ”¾æ‰€æœ‰èŠ‚ç‚¹å†…å­˜
     ~Genealogy() {
         for (FamilyMember* member : allMembers) {
             delete member;
@@ -142,72 +151,153 @@ public:
     }
 };
 
-// Ö÷º¯Êı£º½»»¥½çÃæ
+// æ¸…é™¤è¾“å…¥ç¼“å†²åŒº
+void clearInputBuffer() {
+    cin.clear();
+    cin.ignore(1000, '\n');
+}
+
+// è¾“å…¥æ£€æŸ¥ï¼šæ­£æ•´æ•°ï¼ˆ1-20ï¼Œç”¨äºå„¿å¥³äººæ•°ï¼‰
+void inputNum(int& len) {
+    while (1) {
+        cin >> len;
+        if (!cin.good() || len < 1 || len > 20) {
+            clearInputBuffer();
+            cout << "è¾“å…¥é”™è¯¯ï¼è¯·é‡æ–°è¾“å…¥æ­£æ•´æ•°ï¼ˆ1-20ï¼‰ï¼š";
+        }
+        else {
+            clearInputBuffer();
+            break;
+        }
+    }
+}
+
+// ä¿®æ”¹ï¼šä»…æ£€æŸ¥å§“åéç©º
+bool checkNameFormat(const string& name) {
+    return !name.empty(); // åªè¦éç©ºå­—ç¬¦ä¸²å³å¯
+}
+
+// è¾“å…¥æ£€æŸ¥ï¼šå§“åæ ¼å¼ï¼ˆä»…æ£€æŸ¥éç©ºï¼‰
+void inputName(string& name) {
+    while (1) {
+        // ä½¿ç”¨getlineè¯»å–æ•´è¡Œï¼Œå…è®¸åŒ…å«ç©ºæ ¼
+        getline(cin, name);
+        if (!cin.good() || !checkNameFormat(name)) {
+            clearInputBuffer();
+            cout << "å§“åä¸èƒ½ä¸ºç©ºï¼Œè¯·é‡æ–°è¾“å…¥ï¼š";
+        }
+        else {
+            break;
+        }
+    }
+}
+
+// è¾“å…¥æ£€æŸ¥ï¼šå·²å­˜åœ¨çš„æˆå‘˜å§“åï¼ˆç”¨äºçˆ¶æˆå‘˜ã€è¦æ”¹åçš„æˆå‘˜ï¼‰
+void inputExistingName(string& name, Genealogy& genealogy) {
+    while (1) {
+        inputName(name);
+        if (genealogy.isMemberExists(name)) {
+            break;
+        }
+        else {
+            cout << "é”™è¯¯ï¼šè¯¥æˆå‘˜ä¸å­˜åœ¨ï¼Œè¯·é‡æ–°è¾“å…¥ï¼š";
+        }
+    }
+}
+
+// è¾“å…¥æ£€æŸ¥ï¼šä¸å­˜åœ¨çš„æˆå‘˜å§“åï¼ˆç”¨äºæ–°å¢å­å¥³ã€æ”¹ååçš„å§“åï¼‰
+void inputNewName(string& name, Genealogy& genealogy) {
+    while (1) {
+        inputName(name);
+        if (!genealogy.isMemberExists(name)) {
+            break;
+        }
+        else {
+            cout << "é”™è¯¯ï¼šè¯¥å§“åå·²å­˜åœ¨ï¼Œè¯·é‡æ–°è¾“å…¥ï¼š";
+        }
+    }
+}
+
+// è¾“å…¥æ£€æŸ¥ï¼šæ“ä½œé€‰é¡¹ï¼ˆA-Eï¼‰
+void inputChoice(char& choice) {
+    while (1) {
+        cin >> choice;
+        choice = toupper(choice);
+        if (!cin.good() || !(choice >= 'A' && choice <= 'E')) {
+            clearInputBuffer();
+            cout << "è¾“å…¥é”™è¯¯ï¼è¯·é€‰æ‹©A-Eä¸­çš„æ“ä½œï¼š";
+        }
+        else {
+            clearInputBuffer();
+            break;
+        }
+    }
+}
+// -------------------------- è¾“å…¥æ£€æŸ¥å‡½æ•°ç»“æŸ --------------------------
+
+// ä¸»å‡½æ•°ï¼šäº¤äº’ç•Œé¢
 int main() {
-    cout << "** ¼ÒÆ×¹ÜÀíÏµÍ³ **" << endl;
-    cout << "** ÇëÑ¡ÔñÒªÖ´ĞĞµÄ²Ù×÷£º **" << endl;
-    cout << "** A ---- ÍêÉÆ¼ÒÆ× **" << endl;
-    cout << "** B ---- Ìí¼Ó¼ÒÍ¥³ÉÔ± **" << endl;
-    cout << "** C ---- ½âÉ¢¾Ö²¿¼ÒÍ¥ **" << endl;
-    cout << "** D ---- ¸ü¸Ä¼ÒÍ¥³ÉÔ±ĞÕÃû **" << endl;
-    cout << "** E ---- ÍË³ö³ÌĞò **" << endl;
+    cout << "** å®¶è°±ç®¡ç†ç³»ç»Ÿ **" << endl;
+    cout << "** è¯·é€‰æ‹©è¦æ‰§è¡Œçš„æ“ä½œï¼š **" << endl;
+    cout << "** A ---- å®Œå–„å®¶è°± **" << endl;
+    cout << "** B ---- æ·»åŠ å®¶åº­æˆå‘˜ **" << endl;
+    cout << "** C ---- è§£æ•£å±€éƒ¨å®¶åº­ **" << endl;
+    cout << "** D ---- æ›´æ”¹å®¶åº­æˆå‘˜å§“å **" << endl;
+    cout << "** E ---- é€€å‡ºç¨‹åº **" << endl;
     cout << "************************" << endl;
 
     Genealogy genealogy;
     string ancestorName;
-    cout << "Ê×ÏÈ½¨Á¢Ò»¸ö¼ÒÆ×£¡" << endl;
-    cout << "ÇëÊäÈë×æÏÈµÄĞÕÃû£º";
-    cin >> ancestorName;
+    cout << "é¦–å…ˆå»ºç«‹ä¸€ä¸ªå®¶è°±ï¼" << endl;
+    cout << "è¯·è¾“å…¥ç¥–å…ˆçš„å§“åï¼š";
+   
+    inputNewName(ancestorName, genealogy); // ç¥–å…ˆå§“åéœ€æ˜¯æ–°çš„ï¼ˆä¸å­˜åœ¨ï¼‰
     genealogy.init(ancestorName);
 
     char choice;
     while (true) {
-        cout << "\nÇëÑ¡ÔñÒªÖ´ĞĞµÄ²Ù×÷£º";
-        cin >> choice;
-        choice = toupper(choice);
+        cout << "\nè¯·é€‰æ‹©è¦æ‰§è¡Œçš„æ“ä½œï¼š";
+        inputChoice(choice); // æ£€æŸ¥æ“ä½œé€‰é¡¹åˆæ³•æ€§
 
         if (choice == 'A') {
             string parentName;
             int childCount;
-            cout << "ÇëÊäÈëÒª½¨Á¢¼ÒÍ¥µÄÈËµÄĞÕÃû£º";
-            cin >> parentName;
-            cout << "ÇëÊäÈë" << parentName << "µÄ¶ùÅ®ÈËÊı£º";
-            cin >> childCount;
-            cout << "ÇëÒÀ´ÎÊäÈë" << parentName << "µÄ¶ùÅ®µÄĞÕÃû£º";
+            cout << "è¯·è¾“å…¥è¦å»ºç«‹å®¶åº­çš„äººçš„å§“åï¼š";
+            inputExistingName(parentName, genealogy); // çˆ¶æˆå‘˜å¿…é¡»å­˜åœ¨
+            cout << "è¯·è¾“å…¥" << parentName << "çš„å„¿å¥³äººæ•°ï¼š";
+            inputNum(childCount); // æ£€æŸ¥å„¿å¥³äººæ•°åˆæ³•æ€§
+            cout << "è¯·ä¾æ¬¡è¾“å…¥" << parentName << "çš„å„¿å¥³çš„å§“åï¼š";
             vector<string> childNames(childCount);
             for (int i = 0; i < childCount; ++i) {
-                cin >> childNames[i];
+                inputNewName(childNames[i], genealogy); // å­å¥³å§“åå¿…é¡»ä¸å­˜åœ¨
             }
             genealogy.completeFamily(parentName, childNames);
         }
         else if (choice == 'B') {
             string parentName, childName;
-            cout << "ÇëÊäÈëÒªÌí¼Ó¶ù×Ó£¨»òÅ®¶ù£©µÄÈËµÄĞÕÃû£º";
-            cin >> parentName;
-            cout << "ÇëÊäÈë" << parentName << "ĞÂÌí¼ÓµÄ¶ù×Ó£¨»òÅ®¶ù£©µÄĞÕÃû£º";
-            cin >> childName;
+            cout << "è¯·è¾“å…¥è¦æ·»åŠ å„¿å­ï¼ˆæˆ–å¥³å„¿ï¼‰çš„äººçš„å§“åï¼š";
+            inputExistingName(parentName, genealogy); // çˆ¶æˆå‘˜å¿…é¡»å­˜åœ¨
+            cout << "è¯·è¾“å…¥" << parentName << "æ–°æ·»åŠ çš„å„¿å­ï¼ˆæˆ–å¥³å„¿ï¼‰çš„å§“åï¼š";
+            inputNewName(childName, genealogy); // å­å¥³å§“åå¿…é¡»ä¸å­˜åœ¨
             genealogy.addMember(parentName, childName);
         }
         else if (choice == 'C') {
             string parentName;
-            cout << "ÇëÊäÈëÒª½âÉ¢¼ÒÍ¥µÄÈËµÄĞÕÃû£º";
-            cin >> parentName;
+            cout << "è¯·è¾“å…¥è¦è§£æ•£å®¶åº­çš„äººçš„å§“åï¼š";
+            inputExistingName(parentName, genealogy); // çˆ¶æˆå‘˜å¿…é¡»å­˜åœ¨
             genealogy.dissolveFamily(parentName);
         }
         else if (choice == 'D') {
             string oldName, newName;
-            cout << "ÇëÊäÈëÒª¸ü¸ÄĞÕÃûµÄÈËµÄÄ¿Ç°ĞÕÃû£º";
-            cin >> oldName;
-            cout << "ÇëÊäÈë¸ü¸ÄºóµÄĞÕÃû£º";
-            cin >> newName;
+            cout << "è¯·è¾“å…¥è¦æ›´æ”¹å§“åçš„äººçš„ç›®å‰å§“åï¼š";
+            inputExistingName(oldName, genealogy); // åŸæˆå‘˜å¿…é¡»å­˜åœ¨
+            cout << "è¯·è¾“å…¥æ›´æ”¹åçš„å§“åï¼š";
+            inputNewName(newName, genealogy); // æ–°å§“åå¿…é¡»ä¸å­˜åœ¨
             genealogy.renameMember(oldName, newName);
         }
         else if (choice == 'E') {
-            cout << "³ÌĞòÒÑÍË³ö" << endl;
+            cout << "ç¨‹åºå·²é€€å‡º" << endl;
             break;
-        }
-        else {
-            cout << "´íÎó£ºÎŞĞ§²Ù×÷£¬ÇëÖØĞÂÑ¡Ôñ" << endl;
         }
     }
 
