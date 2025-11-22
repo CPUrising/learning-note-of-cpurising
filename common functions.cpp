@@ -5,6 +5,7 @@ void inputNum(int& len)//cin and check
 		cin >> len;
 		if (!cin.good() || len < 2 || len > 20)
 		{
+			cin.clear();
 			cin.ignore(1000,'\n');
 			cout << "Please re-enter a positive integer (2-20):\n";
 		}
@@ -39,6 +40,7 @@ void inputString(string& k,int bit)
 		if (!cin.good() || !checkString(k,bit))
 		{
 			cout << "Please re-enter a string:\n";
+			cin.clear();
 			cin.ignore( 1000,'\n' );
 		}
 		else

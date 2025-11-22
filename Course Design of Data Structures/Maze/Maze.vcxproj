@@ -125,6 +125,7 @@
   <ItemGroup>
     <ClCompile Include="maze.cpp" />
     <ClCompile Include="mazeMain.cpp" />
+    <ClCompile Include="MyStack.cpp" />
     <ClCompile Include="solveMaze.cpp" />
   </ItemGroup>
   <ItemGroup>

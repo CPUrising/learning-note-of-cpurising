@@ -1,7 +1,6 @@
 #pragma once
 #include <vector>
 #include <utility>
-#include <stack>
 #include <iostream>
 
 // 迷宫单元格状态
@@ -47,4 +46,26 @@ private:
 	// 生成迷宫的核心函数（私有，仅内部调用）
 	void generateMaze();
 };
+
+template <typename T>
+class MyStack {
+private:
+	struct Node {
+		T data;
+		Node* next;
+		Node(const T& d) : data(d), next(nullptr) {}
+	};
+	Node* topNode;
+	int size;
+
+public:
+	MyStack();
+	~MyStack();
+	void push(const T& value);
+	void pop();
+	T top() const;
+	bool isEmpty() const;
+	int getSize() const;
+};
+
 int solveMaze(Maze& maze, std::vector<std::pair<int, int>>& path);

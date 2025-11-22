@@ -77,10 +77,6 @@ bool validateInput(int N, const vector<int>& customers) {
         cerr << "错误：顾客总数N必须是1到1000之间的正整数" << endl;
         return false;
     }
-    if (customers.size() != N) {
-        cerr << "错误：输入的顾客编号数量与N不匹配" << endl;
-        return false;
-    }
     for (int id : customers) {
         if (id <= 0) {
             cerr << "错误：顾客编号必须是正整数（当前无效编号：" << id << "）" << endl;
@@ -92,20 +88,42 @@ bool validateInput(int N, const vector<int>& customers) {
 
 // 处理单组业务数据
 void processSingleCase() {
-    int N=0;
+    int N = 0;
     vector<int> customers;
+    bool inputValid = false;
 
-    cout << "请输入顾客总数N和" << N << "个顾客编号（空格分隔）：";
-    cin >> N;
-    customers.resize(N);
-    for (int i = 0; i < N; ++i) {
-        cin >> customers[i];
-    }
+    while (!inputValid) {
+        cout << "请输入顾客总数N和N个顾客编号（空格分隔）：";
+        // 先读取N
+        if (!(cin >> N)) {
+            cerr << "错误：顾客总数N必须是整数" << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
 
-    if (!validateInput(N, customers)) {
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        return;
+        // 读取N个顾客ID
+        customers.resize(N);
+        bool idsValid = true;
+        for (int i = 0; i < N; ++i) {
+            if (!(cin >> customers[i])) {
+                cerr << "错误：顾客编号必须是整数" << endl;
+                idsValid = false;
+                break;
+            }
+        }
+
+        if (!idsValid) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
+
+        // 验证输入合法性
+        if (validateInput(N, customers)) {
+            inputValid = true;
+        }
+        // 若验证失败，会自动重新循环
     }
 
     // 使用自定义队列存储两个窗口的顾客
@@ -144,6 +162,21 @@ void processSingleCase() {
     cout << endl << "------------------------" << endl;
 }
 
+void inputChar(char& len)//cin and check
+{
+    while (1)
+    {
+        cin >> len;
+        if (!cin.good() || len != 'y' && len != 'n')
+        {
+            cin.clear();
+            cin.ignore(1000, '\n');
+            cout << "Please re-enter y or n:\n";
+        }
+        else
+            break;
+    }
+}
 int main() {
     char cont = 'y';
     cout << "===== 银行业务处理系统 =====" << endl;
@@ -152,7 +185,7 @@ int main() {
         processSingleCase();
 
         cout << "是否继续处理下一组数据？（y/n）：";
-        cin >> cont;
+		inputChar(cont);
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
 

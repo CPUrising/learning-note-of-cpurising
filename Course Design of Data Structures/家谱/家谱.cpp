@@ -4,7 +4,7 @@
 #include <string>
 #include <limits>
 #include <cctype>
-
+//不够完善，就这样吧，应当再加上展示下一代成员的功能
 using namespace std;
 
 // 家族成员类（多叉树节点，添加唯一ID）
@@ -155,13 +155,13 @@ void clearInputBuffer() {
     cin.ignore(1000, '\n');
 }
 
-// 输入检查：正整数（1-20）
+// 输入检查：正整数
 void inputNum(int& len) {
     while (1) {
         cin >> len;
-        if (!cin.good() || len < 1 || len > 20) {
+        if (!cin.good() ) {
             clearInputBuffer();
-            cout << "输入错误！请重新输入正整数（1-20）：";
+            cout << "输入错误！请重新输入正整数：";
         }
         else {
             clearInputBuffer();

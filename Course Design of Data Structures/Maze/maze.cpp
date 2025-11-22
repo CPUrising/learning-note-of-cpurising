@@ -1,6 +1,5 @@
 #include "maze.h"
 #include <iostream>
-#include <stack>
 #include <cstdlib>
 #include <ctime>
 #include <algorithm> // 用于max函数
@@ -30,7 +29,7 @@ Maze::Maze(int r, int c) {
 // 生成迷宫（深度优先搜索算法）
 void Maze::generateMaze() {
 	// 从(1,1)开始（确保在迷宫内部）
-	stack<pair<int, int>> path;
+	MyStack<pair<int, int>> path;
 	int startX = 1, startY = 1;
 	maze[startX][startY] = PATH;
 	path.push({ startX, startY });
@@ -41,7 +40,7 @@ void Maze::generateMaze() {
 	maze[1][1] = PATH; // 入口内侧设为通路
 
 	// 深度优先搜索生成路径
-	while (!path.empty()) {
+	while (!path.isEmpty()) {
 		auto current = path.top();
 		int x = current.first;
 		int y = current.second;

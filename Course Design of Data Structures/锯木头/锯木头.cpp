@@ -104,13 +104,43 @@ void generateBigTestData(int N, vector<int>& lengths) {
     cout << endl;
 }
 
+void inputNum(int& len)//cin and check
+{
+    while (1)
+    {
+        cin >> len;
+        if (!cin.good())
+        {
+            cin.clear();
+            cin.ignore(1000, '\n');
+            cout << "Please re-enter a positive integer :\n";
+        }
+        else
+            break;
+    }
+}
+void inputChar(char& len)//cin and check
+{
+    while (1)
+    {
+        cin >> len;
+        if (!cin.good()||len!='y'&&len!='n')
+        {
+            cin.clear();
+            cin.ignore(1000, '\n');
+            cout << "Please re-enter y or n:\n";
+        }
+        else
+            break;
+    }
+}
 int main() {
     int N;
     vector<int> lengths;
     char useTestData;
 
     cout << "是否使用大数据测试用例？（y/n，n则手动输入）：";
-    cin >> useTestData;
+	inputChar(useTestData);
     cin.ignore(); // 忽略缓冲区换行符
 
     if (tolower(useTestData) == 'y') {
@@ -121,7 +151,7 @@ int main() {
     else {
         // 手动输入
         cout << "请输入N（1≤N≤10000）：";
-        cin >> N;
+		inputNum(N);
         cout << "请输入" << N << "个正整数（木头长度）：";
         lengths.resize(N);
         for (int i = 0; i < N; ++i) {

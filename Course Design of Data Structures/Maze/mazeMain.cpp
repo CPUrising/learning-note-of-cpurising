@@ -1,13 +1,27 @@
 #include "maze.h"
-#include <iostream>
-#include <vector>
-#include <stack>
 using namespace std;
+
+void inputNum(int& len)//cin and check
+{
+	while (1)
+	{
+		cin >> len;
+		if (!cin.good())
+		{
+			cin.clear();
+			cin.ignore(1000, '\n');
+			cout << "Please re-enter a positive integer:\n";
+		}
+		else
+			break;
+	}
+}
 
 int main() {
 	int rows, cols;
 	cout << "请输入迷宫的行数和列数（建议10-30）：";
-	cin >> rows >> cols;
+	inputNum(rows);
+	inputNum(cols);
 
 	// 创建迷宫
 	Maze maze(rows, cols);

@@ -1,6 +1,4 @@
 #include "maze.h"
-#include<vector>
-#include <stack>
 using namespace std;
 int solveMaze(Maze &maze, vector<pair<int, int>> &path)
 {
@@ -15,12 +13,12 @@ int solveMaze(Maze &maze, vector<pair<int, int>> &path)
 	const int dx[] = { -1,0,1,0 };
 	const int dy[] = { 0,1,0,-1 };
 
-	stack <pair<int, int>> s;
+	MyStack <pair<int, int>> s;
 	s.push({ startX, startY });
 	visited[startX][startY] = true;
 	path.push_back(start);
 
-	while(!s.empty())
+	while(!s.isEmpty())
 	{
 		pair<int, int> current = s.top();
 		int x = current.first;
