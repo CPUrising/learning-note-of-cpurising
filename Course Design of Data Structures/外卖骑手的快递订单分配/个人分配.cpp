@@ -27,7 +27,7 @@ enum class OrderStatus {
 struct RiderStatus {
     Coordinate currentPos;    // 当前位置
     int currentOrderCount;    // 已接订单数（负载）
-    double remainingBattery;  // 剩余电量（0-100，简单版可忽略）
+    double remainingBattery;  // 剩余电量（0-100）
     RiderStatus(Coordinate pos = Coordinate(), int count = 0, double battery = 100)
         : currentPos(pos), currentOrderCount(count), remainingBattery(battery) {
     }
