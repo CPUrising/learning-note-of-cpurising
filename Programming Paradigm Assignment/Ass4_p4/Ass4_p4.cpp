@@ -1,3 +1,20 @@
+//题目 4
+//
+//编写一个基类，包含：
+//
+//* 一个名为`process()`的虚函数
+//
+//* 一个名为`compute()`的非虚函数
+//
+//
+//然后派生一个类`AdvancedProcessor`，该类重写（override）虚函数`process()`，
+//并重新定义（隐藏）非虚函数`compute()`。
+//
+//创建`AdvancedProcessor`类的对象，将其向上转型为基类指针，
+//使用`chrono`库（`<chrono > `）
+//测量多次调用`process()`和`compute()`函数的执行时间。
+//比较并打印虚函数调用与非虚函数调用的平均时间差异。
+
 #include <iostream>
 #include <chrono>
 using namespace std;
