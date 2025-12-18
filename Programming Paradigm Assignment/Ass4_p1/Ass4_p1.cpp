@@ -1,9 +1,9 @@
-﻿//2458620 �ź� ���ں��ڷ�ʡ��
+﻿//2458620 ??? ???????????
 //题目 1
 //
 //设计一个名为`BankAccount`的类，用于模拟简单的银行系统。每个账户需包含以下信息：
 //
-//* 账户名（默认值："anonymous"）
+//* 账户名（默认值："anonymous"9）
 //
 //* 账户余额（默认值：0.0）
 //
@@ -24,136 +24,84 @@
 //
 //
 //允许同时存在多个 "anonymous" 账户，但它们的余额和交易记录必须完全独立。
-
+//2458620 古贺 终于后悔反省了
 #include <iostream>
 #include <string>
-#include <iomanip>
-
 using namespace std;
 
 class BankAccount
 {
-private:
-    string accountName;
-    double balance;//��ô��������0�ų�
-    string accountType;
 public:
-    BankAccount(const string& name = "anonymous", double bal = 0.0, const string& type = "�����˻�") :
-        accountName(name), balance(bal), accountType(type) {
-    }
-    void deposit(double amount);
-    void withdraw(double amount);
-    bool operator==(const BankAccount& other)const;
-    bool operator!=(const BankAccount& other)const;
-    void display() const;
-    // 添加设置账户信息的方法，用于用户输入
-    void setAccountInfo(const string& name, double bal, const string& type) {
-        accountName = name;
-        balance = bal;
-        accountType = type;
-    }
+	BankAccount(string accountName = "anonymous", double accountBalance = 0.0, string accountType = "储蓄账户") :
+		accountName(accountName), accountBalance(accountBalance), accountType(accountType) {};
+	~BankAccount() {};
+	void deposit(double amount);
+	void withdraw(double amount);
+	void display();
+	bool operator==(const BankAccount& other)const;
+	bool operator!=(const BankAccount& other)const;
+private:
+	string accountName;
+	double accountBalance;//余额
+	string accountType;
 };
-
-int main() {
-    // 用户输入账户1信息
-    BankAccount acc1;
-    string name1;
-    double bal1;
-    string type1;
-    cout << "请输入账户1信息：" << endl;
-    cout << "账户名称：";
-    cin >> name1;
-    cout << "账户余额：";
-    cin >> bal1;
-    cout << "账户类型：";
-    cin >> type1;
-    acc1.setAccountInfo(name1, bal1, type1);
-    cout << "\n账户1信息：" << endl;
-    acc1.display();
-
-    // 用户输入账户2信息
-    BankAccount acc2;
-    string name2;
-    double bal2;
-    string type2;
-    cout << "\n请输入账户2信息：" << endl;
-    cout << "账户名称：";
-    cin >> name2;
-    cout << "账户余额：";
-    cin >> bal2;
-    cout << "账户类型：";
-    cin >> type2;
-    acc2.setAccountInfo(name2, bal2, type2);
-    cout << "\n账户2信息：" << endl;
-    acc2.display();
-
-    // 用户输入存款金额
-    double depositAmount;
-    cout << "\n请输入账户1的存款金额：";
-    cin >> depositAmount;
-    acc1.deposit(depositAmount);
-    cout << "账户1存款后信息：" << endl;
-    acc1.display();
-
-    // 用户输入取款金额
-    double withdrawAmount;
-    cout << "\n请输入账户2的取款金额：";
-    cin >> withdrawAmount;
-    acc2.withdraw(withdrawAmount);
-    cout << "账户2取款后信息：" << endl;
-    acc2.display();
-
-    // 再次取款（用户输入）
-    double anotherWithdraw;
-    cout << "\n请再次输入账户2的取款金额：";
-    cin >> anotherWithdraw;
-    acc2.withdraw(anotherWithdraw);
-
-    // 用户输入账户3和4信息
-    BankAccount acc3, acc4;
-    string name3, name4;
-    cout << "\n请输入账户3名称：";
-    cin >> name3;
-    acc3.setAccountInfo(name3, 0.0, "储蓄账户");  // 余额和类型使用默认值
-    cout << "请输入账户4名称：";
-    cin >> name4;
-    acc4.setAccountInfo(name4, 0.0, "储蓄账户");  // 余额和类型使用默认值
-
-    cout << "\n账户2和账户3是否相等：" << (acc2 == acc3 ? "是" : "否") << endl;
-    cout << "账户2和账户4是否相等：" << (acc2 == acc4 ? "是" : "否") << endl;
-    cout << "账户2和账户4是否不等：" << (acc2 != acc4 ? "是" : "否") << endl;
-
-    return 0;
-}
 
 void BankAccount::deposit(double amount)
 {
-    balance += amount;
+	accountBalance += amount;
+	cout << "存入" << amount << endl;
+	cout << "剩余" << accountBalance << endl;
 }
 
-void BankAccount::withdraw(double amount) {
-    if (amount <= 0) return;
-
-    if (amount <= balance) {
-        balance -= amount;
-    }
-    else {
-        cout << "警告：余额不足，无法提取 " << amount << " 元" << endl;
-    }
+void BankAccount::withdraw(double amount)
+{
+	if(accountBalance>=amount)
+	{
+		accountBalance -= amount;
+		cout << "取出" << amount << endl;
+		cout << "剩余" << accountBalance << endl;
+	}
 }
 
-void BankAccount::display() const {
-    cout << "账户名称：" << accountName << endl;
-    cout << "账户余额：" << fixed << setprecision(2) << balance << " 元" << endl;
-    cout << "账户类型：" << accountType << endl;
+void BankAccount::display()
+{
+	cout << "账户名" << accountName << endl;
+	cout << "账户类型" << accountType << endl;
+	cout << "存款" << accountBalance << endl;
 }
 
-// 重载相等判断：比较账户名称
-bool BankAccount::operator==(const BankAccount& other) const {
-    return accountName == other.accountName;
+bool BankAccount::operator==(const BankAccount& other)const
+{
+	return accountName == other.accountName;
 }
 
-// 重载不等判断：比较账户名称
-bool BankAccount::operator!=(const BankAccount& other) const {
-    return !(*this == other);
+bool BankAccount::operator!=(const BankAccount& other)const
+{
+	return accountName != other.accountName;
+}
+
+int main()
+{
+	BankAccount acc1;
+	acc1.display();
+	acc1.deposit(1000.5);
+	acc1.withdraw(500.2);
+	acc1.withdraw(600);  // 余额不足测试
+
+	// 测试2：自定义账户
+	BankAccount acc2("张三", 2000, "活期账户");
+	acc2.display();
+
+	// 测试3：相等性判断
+	BankAccount acc3("张三");
+	if (acc2 == acc3)
+	{
+		cout << "acc2 和 acc3 账户名相同" << endl;
+	}
+	if (acc1 != acc2)
+	{
+		cout << "acc1 和 acc2 账户名不同" << endl;
+	}
+
+	return 0;
 }

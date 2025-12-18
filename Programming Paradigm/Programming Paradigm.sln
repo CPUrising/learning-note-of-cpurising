@@ -31,6 +31,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "指向函数的指针", "�
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "派生类实现多种数列", "派生类实现多种数列\派生类实现多种数列.vcxproj", "{BD3AA574-438D-4B73-929D-97CF94865282}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "多线程", "多线程\多线程.vcxproj", "{8054597C-E0F2-4C82-BBBE-B98C6620698D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -151,6 +153,14 @@ Global
 		{BD3AA574-438D-4B73-929D-97CF94865282}.Release|x64.Build.0 = Release|x64
 		{BD3AA574-438D-4B73-929D-97CF94865282}.Release|x86.ActiveCfg = Release|Win32
 		{BD3AA574-438D-4B73-929D-97CF94865282}.Release|x86.Build.0 = Release|Win32
+		{8054597C-E0F2-4C82-BBBE-B98C6620698D}.Debug|x64.ActiveCfg = Debug|x64
+		{8054597C-E0F2-4C82-BBBE-B98C6620698D}.Debug|x64.Build.0 = Debug|x64
+		{8054597C-E0F2-4C82-BBBE-B98C6620698D}.Debug|x86.ActiveCfg = Debug|Win32
+		{8054597C-E0F2-4C82-BBBE-B98C6620698D}.Debug|x86.Build.0 = Debug|Win32
+		{8054597C-E0F2-4C82-BBBE-B98C6620698D}.Release|x64.ActiveCfg = Release|x64
+		{8054597C-E0F2-4C82-BBBE-B98C6620698D}.Release|x64.Build.0 = Release|x64
+		{8054597C-E0F2-4C82-BBBE-B98C6620698D}.Release|x86.ActiveCfg = Release|Win32
+		{8054597C-E0F2-4C82-BBBE-B98C6620698D}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
